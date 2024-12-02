@@ -85,7 +85,71 @@ class SDF:
             reward = [0]*4
             #add reward for correct direction
             dir = np.arctan2(end.y - c.y, end.x - c.x)
+
+    def getAdjacentCells(self, cell):
+        dirs = [(0, 1), (0, -1), (1, 0), (-1, 0)] # only 90 degree turns for now lol
+        adjCells = list()
+        (crow, ccol) = (cell.row, cell.col)
+        for dir in dirs:
+            (adjrow, adjcol) = (crow + dir[0], ccol + dir[1])
+            adjCell = Cell(adjrow, adjcol)
+            if self.inGrid(adjCell):
+                adjCells.append(adjCell)
+        return adjCells
+
+
+    def chooseNextCell(self, curr_cell, end_cell):
+        adjCells = self.getAdjacentCells(curr_cell)
+
+        best_cell = curr_cell
+        best_dist_from_end = 1e6
+        best_dist_from_obs = 0
+        
+        for cell in adjCells:
+            cell_dist_from_end = ((cell.row - end_cell.row)**2 + (cell.col - end_cell.col)**2)**(1/2)
+            cell_dist_from_obs = self.distances[cell.row, cell.col]
             
+            if (((cell_dist_from_end < best_dist_from_end) and (cell_dist_from_obs > 0)) 
+             or ((cell_dist_from_end == best_dist_from_end) and (cell_dist_from_obs > best_dist_from_obs))):
+                best_cell = cell
+                best_dist_from_end = cell_dist_from_end
+                best_dist_from_obs = cell_dist_from_obs
+        return best_cell
+    
+
+    
+    def traverse_dummy(self, start, end):
+        """
+        Return a list of Cell objects
+
+        Args:
+        - start:
+        - end:
+        """
+        if not self.inGrid(start):
+            raise Exception('Start not in grid.') 
+        if not self.inGrid(end):
+            raise Exception('End not in grid.') 
+        
+        start_val = self.distances[start.row, start.col]
+        end_val = self.distances[end.row, end.col]
+
+        if start_val == 0:
+            raise Exception('Start in obstacle. Cannot compute traversal.')
+        if end_val == 0:
+            raise Exception('End in obstacle. Cannot compute traversal.')
+
+        curr_cell = start
+        cells_traversed = list()
+        
+        while curr_cell != end:
+            cells_traversed.append(curr_cell)
+            curr_cell = self.chooseNextCell(curr_cell, end)
+        
+        cells_traversed.append(end)
+
+        return cells_traversed
+        
 
     def to_numpy(self):
         """Export the grid in the form of a 2D numpy matrix.
@@ -244,6 +308,9 @@ class SDF:
         return Cell(r, c)
         raise NotImplementedError
 
+    def inGrid(self, cell):
+        return (cell.row >= 0) and (cell.col >= 0) and (cell.row < self.rows) and (cell.col < self.cols)
+    
     def inQ(self, cell):
         """Is the cell inside this grid? Return True if yes, False otherwise."""
         # TODO: Assignment 2, Problem 1.1 (test_traversal)

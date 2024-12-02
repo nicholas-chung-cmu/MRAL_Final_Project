@@ -5,7 +5,7 @@ import sys
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 
-from data_structures.grid import Grid2D, Point
+from data_structures.grid import Grid2D, Point, Cell
 from data_structures.sdf import SDF
 from utils import png_to_grid2d, visualize
 
@@ -16,11 +16,22 @@ def test_sdf(grid):
     print(np.flipud(sdf.distances))
     print(np.count_nonzero(sdf.distances == -1))
 
+    # drawing grids
     (fig1, ax1) = draw_grid(np.flipud(sdf.distances), sdf.rows, sdf.cols, 'SDF Grid', 'Greys_r')
     (fig2, ax2) = draw_obstacles_from_SDF(sdf)
 
     fig1.show()
     fig2.show()
+    
+    # a test case that works for both grids
+    startCell = Cell(0, 2)
+    targetCell = Cell(37, 8)
+
+    traversedCells = sdf.traverse_dummy(startCell, targetCell)
+    # traversedPoints = convert_cells_to_points(traversedCells)
+    # print('rows: ', sdf.rows, '; cols: ', sdf.cols) # prints for debugging purposes
+    # print('points:, ', traversedPoints)
+    draw_lines_on_grid_from_cells(ax2, traversedCells)
 
 
 def test_data_structure(map_name, grid_visible=True):

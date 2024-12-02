@@ -40,7 +40,7 @@ def draw_obstacles_from_SDF(sdf):
     (fig, ax) = draw_grid(obstacle_grid, rows, cols, 'Obstacles from SDF')
     return (fig, ax)
 
-def draw_lines_on_grid(ax, points):
+def draw_lines_on_grid_from_points(ax, points):
     """
     Draws a grid.
 
@@ -52,8 +52,25 @@ def draw_lines_on_grid(ax, points):
     for point in range(num_points-1):
         (x0, y0) = points[point]
         (x1, y1) = points[point+1]
-        ax.plot([x0+0.5, x1+0.5], [y0+0.5, y1+0.5], color='red')
+        ax.plot([x0, x1], [y0, y1], color='red')
         
+def convert_cells_to_points(cells):
+    """
+    Converts a list of cells to a list of tuples such that each point is centered in each cell.
+
+    Args:
+    - cells: list of Cell objects 
+    """
+    points = list()
+    for i in range(len(cells)):
+        cell_to_tuple = (cells[i].col + 0.5, cells[i].row + 0.5)
+        points.append(cell_to_tuple)
+    
+    return points
+
+def draw_lines_on_grid_from_cells(ax, cells):
+    points = convert_cells_to_points(cells)
+    draw_lines_on_grid_from_points(ax, points)
 
         
 
