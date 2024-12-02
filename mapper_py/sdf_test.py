@@ -16,8 +16,11 @@ def test_sdf(grid):
     print(np.flipud(sdf.distances))
     print(np.count_nonzero(sdf.distances == -1))
 
-    draw_grid(np.flipud(sdf.distances), sdf.rows, sdf.cols, 'SDF Grid', 'Greys_r')
-    draw_obstacles_from_SDF(sdf)
+    (fig1, ax1) = draw_grid(np.flipud(sdf.distances), sdf.rows, sdf.cols, 'SDF Grid', 'Greys_r')
+    (fig2, ax2) = draw_obstacles_from_SDF(sdf)
+
+    fig1.show()
+    fig2.show()
 
 
 def test_data_structure(map_name, grid_visible=True):
@@ -86,9 +89,11 @@ def test_data_structure(map_name, grid_visible=True):
 
     rows = grid.height
     cols = grid.width
-    draw_grid(np.flipud(grid.to_numpy()), rows, cols, 'Obstacles from Logodds Grid')
+    (fig3, ax3) = draw_grid(np.flipud(grid.to_numpy()), rows, cols, 'Obstacles from Logodds Grid')
 
-    
+    #draw_lines_on_grid(ax3, [(1,1), (4, 4), (5, 7), (2, 5)]) # test of draw_lines
+    plt.show() # shows figs in groups
+
     # Show the grid
     #grid_ax.set_aspect('equal')
     #plt.show()

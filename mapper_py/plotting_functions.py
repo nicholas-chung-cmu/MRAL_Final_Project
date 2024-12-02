@@ -24,7 +24,8 @@ def draw_grid(grid, rows, cols, title, cmap_str='Greys'):
     #Disable ticks
     ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
 
-    plt.show()
+    return (fig, ax)
+    #plt.show()
 
 def draw_obstacles_from_SDF(sdf):
     rows = sdf.rows
@@ -36,4 +37,23 @@ def draw_obstacles_from_SDF(sdf):
             if np.flipud(sdf.distances)[row, col] == 0:
                 obstacle_grid[row, col] = 1
     
-    draw_grid(obstacle_grid, rows, cols, 'Obstacles from SDF')
+    (fig, ax) = draw_grid(obstacle_grid, rows, cols, 'Obstacles from SDF')
+    return (fig, ax)
+
+def draw_lines_on_grid(ax, points):
+    """
+    Draws a grid.
+
+    Args:
+    - points: list of tuples, in which each tuple is a point (x, y) for a cell in the grid
+    """
+    num_points = len(points)
+
+    for point in range(num_points-1):
+        (x0, y0) = points[point]
+        (x1, y1) = points[point+1]
+        ax.plot([x0+0.5, x1+0.5], [y0+0.5, y1+0.5], color='red')
+        
+
+        
+
