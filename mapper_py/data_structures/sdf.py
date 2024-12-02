@@ -1,5 +1,6 @@
 from data_structures.grid import Grid2D, Cell
 import numpy as np
+from .grid import Point
 
 class SDF:
     """Signed Distance Field data structure
@@ -84,8 +85,6 @@ class SDF:
             reward = [0]*4
             #add reward for correct direction
             dir = np.arctan2(end.y - c.y, end.x - c.x)
-            
-
             
 
     def to_numpy(self):

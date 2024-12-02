@@ -9,10 +9,16 @@ from data_structures.grid import Grid2D, Point
 from data_structures.sdf import SDF
 from utils import png_to_grid2d, visualize
 
+from plotting_functions import *
+
 def test_sdf(grid):
     sdf = SDF(grid)
     print(np.flipud(sdf.distances))
     print(np.count_nonzero(sdf.distances == -1))
+
+    draw_grid(np.flipud(sdf.distances), sdf.rows, sdf.cols, 'SDF Grid', 'Greys_r')
+    draw_obstacles_from_SDF(sdf)
+
 
 def test_data_structure(map_name, grid_visible=True):
     np.set_printoptions(threshold = np.inf)
@@ -22,15 +28,16 @@ def test_data_structure(map_name, grid_visible=True):
     # Path to the png file corresponding to the environment
     # Black regions are occupied, white regions are free
     # In this test, a grid map should be created for this map
-    png_map_path = f'test_data/{map_name}.png'
+    #png_map_path = f'test_data/{map_name}.png'
 
+    # path for belle
+    png_map_path = rf'C:\Users\litin\OneDrive\Desktop\MRAL_Final_Project\mapper_py\test_data\{map_name}.png'
+    
     # Grid map at resolution 0.1 of size 60 cells x 80 cells
     # Minimum probability (i.e. highest confidence about free space) is 0.001
     # Maximum probability (i.e. highest confidence about occupied space) is 0.999
     grid = Grid2D(0.1, 60, 80, 0.001, 0.999)
     grid = Grid2D(0.5, 30, 40, 0.001, 0.999)
-    
-    
 
 
     # Update the grid using the png image
@@ -77,9 +84,14 @@ def test_data_structure(map_name, grid_visible=True):
 
     test_sdf(grid)
 
+    rows = grid.height
+    cols = grid.width
+    draw_grid(np.flipud(grid.to_numpy()), rows, cols, 'Obstacles from Logodds Grid')
+
+    
     # Show the grid
     #grid_ax.set_aspect('equal')
-    plt.show()
+    #plt.show()
 
 def test_traversal(grid_ax, start=Point(1.2, 1.2), end=Point(2.2, 1.5), test_file='traced_cells_1',
                    c='navy', grid_visible=True):
