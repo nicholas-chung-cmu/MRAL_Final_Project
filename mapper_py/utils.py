@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 
 
 def png_to_grid2d(grid, image_filepath):
+    print(image_filepath)
     """Update the grid cell values using a PNG image.
 
     Args:

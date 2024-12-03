@@ -7,6 +7,7 @@ from matplotlib.ticker import MultipleLocator
 
 from data_structures.grid import Grid2D, Point, Cell
 from data_structures.sdf import SDF
+from data_structures.robot import Robot
 from utils import png_to_grid2d, visualize
 
 from plotting_functions import *
@@ -33,6 +34,23 @@ def test_sdf(grid):
     # print('points:, ', traversedPoints)
     draw_lines_on_grid_from_cells(ax2, traversedCells)
 
+def test_robot(map_name):
+    np.set_printoptions(threshold = np.inf)
+    np.set_printoptions(linewidth = np.inf)
+
+    # path for belle
+    #png_map_path = rf'C:\Users\litin\OneDrive\Desktop\MRAL_Final_Project\mapper_py\test_data\{map_name}.png'
+    
+    # path for nick
+    png_map_path = "test_data/" + map_name + ".png"
+    
+    local_grid = Grid2D(0.5, 30, 40, 0.001, 0.999)
+    global_grid = Grid2D(0.5, 30, 40, 0.001, 0.999)
+    global_grid = png_to_grid2d(global_grid, png_map_path)
+    start = Cell(0, 2)
+    end = Cell(37, 8)
+    robot = Robot(global_grid, local_grid, start)
+    robot.traverse(end)
 
 def test_data_structure(map_name, grid_visible=True):
     np.set_printoptions(threshold = np.inf)
@@ -45,56 +63,22 @@ def test_data_structure(map_name, grid_visible=True):
     #png_map_path = f'test_data/{map_name}.png'
 
     # path for belle
-    png_map_path = rf'C:\Users\litin\OneDrive\Desktop\MRAL_Final_Project\mapper_py\test_data\{map_name}.png'
+    #png_map_path = rf'C:\Users\litin\OneDrive\Desktop\MRAL_Final_Project\mapper_py\test_data\{map_name}.png'
     
+    # path for nick
+    png_map_path = "test_data/" + map_name + ".png"
+
+
     # Grid map at resolution 0.1 of size 60 cells x 80 cells
     # Minimum probability (i.e. highest confidence about free space) is 0.001
     # Maximum probability (i.e. highest confidence about occupied space) is 0.999
-    grid = Grid2D(0.1, 60, 80, 0.001, 0.999)
+    #grid = Grid2D(0.1, 60, 80, 0.001, 0.999)
     grid = Grid2D(0.5, 30, 40, 0.001, 0.999)
 
 
     # Update the grid using the png image
     grid = png_to_grid2d(grid, png_map_path)
     
-
-    # Get a numpy array corresponding to the grid
-    #grid_numpy = grid.to_numpy()
-
-    # Load the correct answer
-    #b = np.load(f'test_data/{map_name}.npz')
-    #grid_numpy_correct = b['grid_numpy']
-
-    # Check if all the values are close
-    # If you get "test_data_structure failed", check your grid2d implementation
-    #if (np.abs(grid_numpy_correct - grid_numpy) < 1e-6).all():
-        #cprint.info('test_data_structure successful.')
-    #else:
-        #cprint.err('test_data_structure failed.', interrupt=False)
-
-    # Visualize for extra clarity
-    #grid_fig, grid_ax = plt.subplots()
-    #pos = visualize(grid, ax=grid_ax)
-
-    # The colorbar indicates occupancy probabilities in range [0.0, 1.0]
-    #grid_fig.colorbar(pos, ax=grid_ax)
-
-    # Create grid lines -- you can disable them if you like for clarity
-    #if grid_visible:
-        #grid_ax.xaxis.set_major_locator(MultipleLocator(1.0))
-        #grid_ax.yaxis.set_major_locator(MultipleLocator(1.0))
-        #grid_ax.xaxis.set_minor_locator(MultipleLocator(grid.resolution))
-        #grid_ax.yaxis.set_minor_locator(MultipleLocator(grid.resolution))
-        #rid_ax.grid(which='major', axis='both', linestyle='-')
-        #grid_ax.grid(which='minor', axis='both', linestyle='-')
-
-    # Labels for clarity on the cell space and point space
-    #grid_ax.set_xlabel('Cell Space: Cols, Point Space: X (meters)')
-    #grid_ax.set_ylabel('Cell Space: Rows, Point Space: Y (meters)')
-
-    # Only display the relevant part of the grid
-    #grid_ax.set_xlim([0.0, grid.resolution * grid.width])
-    #grid_ax.set_ylim([0.0, grid.resolution * grid.height])
 
     test_sdf(grid)
 
@@ -178,8 +162,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     print(args.map)
-    test_data_structure(args.map)
-    test_data_structure("obs1")
+    #test_data_structure(args.map)
+    #test_data_structure("obs1")
+    test_robot("obs1")
 
     trav_fig, trav_ax = plt.subplots()
 

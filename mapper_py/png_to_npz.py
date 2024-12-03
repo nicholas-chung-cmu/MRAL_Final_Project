@@ -50,12 +50,12 @@ class Utils:
 print("Converting images to numpy arrays...")
 
 # paths for nick
-# input_path  = "C:/Users/Monke/OneDrive/Desktop\VSCode\MRAL\Assignment _2\.venv/assignment2-handout\mapper_py/test_data"
-# output_path = "C:/Users/Monke/OneDrive/Desktop\VSCode\MRAL\Assignment _2\.venv/assignment2-handout\mapper_py/test_data"
+input_path  = "C:/Users/Monke/OneDrive/Desktop\VSCode\MRAL\Assignment _2\.venv/assignment2-handout\mapper_py/test_data"
+output_path = "C:/Users/Monke/OneDrive/Desktop\VSCode\MRAL\Assignment _2\.venv/assignment2-handout\mapper_py/test_data"
 
 # paths for belle
-input_path  = "C:\Users\litin\OneDrive\Desktop\MRAL_Final_Project\mapper_py\test_data"
-output_path = "C:\Users\litin\OneDrive\Desktop\MRAL_Final_Project\mapper_py\test_data"
+#input_path  = "C:\Users\litin\OneDrive\Desktop\MRAL_Final_Project\mapper_py\test_data"
+#output_path = "C:\Users\litin\OneDrive\Desktop\MRAL_Final_Project\mapper_py\test_data"
 
 for f in os.listdir(input_path):
     if f.find(".png") != -1:

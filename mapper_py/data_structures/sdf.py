@@ -15,25 +15,23 @@ class SDF:
         self.grid = grid
         self.cols = int(grid.width)
         self.rows = int(grid.height)
-        self.maxDist = 10
+        self.maxDist = max(self.rows, self.cols)//5
         self.distances = np.array([[-1]*self.cols]*self.rows)
 
         self.load_obs()
-        self.populate_sdf()
+        self.update_sdf()
 
         self.N = self.cols * self.rows
 
-        # Initially all the logodds values are zero.
-        # A logodds value of zero corresponds to an occupancy probability of 0.5.
-        self.data = [0.0] * self.N
 
     def load_obs(self):
         for row in range(self.rows):
             for col in range(self.cols):
                 if self.grid.occupiedQ(Cell(row, col)):
                     self.distances[row][col] = 0
+                    #print('obs found')
 
-    def populate_sdf(self):
+    def update_sdf(self):
         dists = self.distances
         for row in range(self.rows):
             for col in range(self.cols):
@@ -41,10 +39,6 @@ class SDF:
                     self.populate_sdf_local(row, col)
     
     def populate_sdf_local(self, row, col):
-        ri = 0
-        rf = self.rows
-        ci = 0
-        cf = self.cols
         ri, rf, ci, cf = self.sdfSearchLimit(row, col)
 
         shortestDist = self.maxDist
@@ -75,8 +69,8 @@ class SDF:
             cf = self.cols
 
         return ri, rf, ci, cf
-        
-    def traverse(self, start, end):
+
+    def traverse(self, start, end): #nick: unfinished
         """start and end are Cell objects
         return a list of Cell objects, where each entry is the path traveled from start to end"""
         c = start
