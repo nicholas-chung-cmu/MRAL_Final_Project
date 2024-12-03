@@ -17,21 +17,27 @@ def test_sdf(grid):
     print(np.count_nonzero(sdf.distances == -1))
 
     # drawing grids
-    (fig1, ax1) = draw_grid(np.flipud(sdf.distances), sdf.rows, sdf.cols, 'SDF Grid', 'Greys_r')
+    #(fig1, ax1) = draw_grid(np.flipud(sdf.distances), sdf.rows, sdf.cols, 'SDF Grid', 'Greys_r')
+    #ax1.add_patch(plt.Rectangle((5,5), 1, 1, color='yellow')) #test
     (fig2, ax2) = draw_obstacles_from_SDF(sdf)
+    plt.close()
 
-    fig1.show()
-    fig2.show()
+    # fig1.show()
+    # fig2.show()
     
     # a test case that works for both grids
-    startCell = Cell(0, 2)
-    targetCell = Cell(37, 8)
+    startCell = Cell(0, 4)
+    targetCell = Cell(31, 23)
 
-    traversedCells = sdf.traverse_dummy(startCell, targetCell)
-    # traversedPoints = convert_cells_to_points(traversedCells)
+    borderCellGroups = dict()
+    traversedCells = sdf.traverse_dummy_improved(startCell, targetCell, 5, borderCellGroups)
+    traversedPoints = convert_cells_to_points(traversedCells) 
     # print('rows: ', sdf.rows, '; cols: ', sdf.cols) # prints for debugging purposes
-    # print('points:, ', traversedPoints)
-    draw_lines_on_grid_from_cells(ax2, traversedCells)
+    #print('points: ', traversedPoints)
+    #draw_lines_on_grid_from_cells(ax1, traversedCells)
+    #draw_lines_on_grid_incrementally(sdf, traversedCells, 5)
+    #highlight_referenced_cells_incrementally(sdf, borderCellGroups, 5)
+    trace_traversal_with_sensor(sdf, traversedPoints, borderCellGroups, len(traversedPoints)-1)
 
 
 def test_data_structure(map_name, grid_visible=True):
@@ -100,10 +106,10 @@ def test_data_structure(map_name, grid_visible=True):
 
     rows = grid.height
     cols = grid.width
-    (fig3, ax3) = draw_grid(np.flipud(grid.to_numpy()), rows, cols, 'Obstacles from Logodds Grid')
+    #(fig3, ax3) = draw_grid(np.flipud(grid.to_numpy()), rows, cols, 'Obstacles from Logodds Grid')
 
     #draw_lines_on_grid(ax3, [(1,1), (4, 4), (5, 7), (2, 5)]) # test of draw_lines
-    plt.show() # shows figs in groups
+    #plt.show() # shows figs in groups
 
     # Show the grid
     #grid_ax.set_aspect('equal')

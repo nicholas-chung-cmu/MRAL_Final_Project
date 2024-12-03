@@ -1,6 +1,9 @@
 from data_structures.grid import Grid2D, Cell
 import numpy as np
 from .grid import Point
+from copy import deepcopy
+
+from .sensor import *
 
 class SDF:
     """Signed Distance Field data structure
@@ -76,15 +79,15 @@ class SDF:
 
         return ri, rf, ci, cf
         
-    def traverse(self, start, end):
-        """start and end are Cell objects
-        return a list of Cell objects, where each entry is the path traveled from start to end"""
-        c = start
+    # def traverse(self, start, end):
+    #     """start and end are Cell objects
+    #     return a list of Cell objects, where each entry is the path traveled from start to end"""
+    #     c = start
 
-        while c != end:
-            reward = [0]*4
-            #add reward for correct direction
-            dir = np.arctan2(end.y - c.y, end.x - c.x)
+    #     while c != end:
+    #         reward = [0]*4
+    #         #add reward for correct direction
+    #         dir = np.arctan2(end.y - c.y, end.x - c.x)
 
     def getAdjacentCells(self, cell):
         dirs = [(0, 1), (0, -1), (1, 0), (-1, 0)] # only 90 degree turns for now lol
@@ -149,6 +152,131 @@ class SDF:
         cells_traversed.append(end)
 
         return cells_traversed
+    
+    def getCellsAtRangeBorder_square(self, curr, range):
+        base_dirs = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)] 
+        dirs = [(range * x, range * y) for (x, y) in base_dirs]
+        #print('dirs: ', dirs)
+        borderCells = list()
+        (crow, ccol) = (curr.row, curr.col)
+        for dir in dirs:
+            (nrow, ncol) = (crow + dir[0], ccol + dir[1])
+            borderCell = Cell(nrow, ncol)
+            if self.inGrid(borderCell):
+                borderCells.append(borderCell)
+        return borderCells
+    
+    def getCellsAtRangeBorder_sensor(self, curr, range):
+        cells = list()
+
+        sensor = Sensor()
+        angles = np.linspace(0, 2.0 * np.pi, sensor.num_rays, False)
+        rays = list()
+        (x, y) = (curr.col, curr.row)
+        pos = Point(x, y)
+        for angle in angles:
+            rays.append(Ray(pos, Point(np.cos(angle), np.sin(angle))))
+        
+        for ray in rays:
+            point = ray.point_at_dist(float(range))
+            row = int(point.y) # assuming resolution of 1
+            col = int(point.x) 
+            #print(f'point: ({point.x},{point.y})')
+            cell = Cell(row, col)
+            if self.inGrid(cell):
+                cells.append(cell)
+        return cells
+
+    
+    def obstacleInPath(self, curr, next):
+        #print(f'curr point: ({curr.row}, {curr.col})')
+        traversal = self.traverse_cells(curr, next)
+        cellsTraversed = traversal[1]
+
+        if cellsTraversed == None:
+            raise Exception('huh???')
+        
+        for cell in cellsTraversed:
+            crow, ccol = cell.row, cell.col
+            if self.distances[crow, ccol] == 0:
+                return True
+        return False
+
+    def chooseNextCell_improved(self, curr, end, range, borderCellGroups):
+        curr_point = (curr.row, curr.col)
+        best_cell = curr
+        best_dist_from_end = 1e6
+        best_dist_from_obs = 0
+        
+        curr_dist_from_end = int(((curr.row - end.row)**2 + (curr.col - end.col)**2)**(1/2))
+        range = min(range, curr_dist_from_end)
+
+        # i.e. pointing at the same address if just best_cell = curr) ??
+        while (best_cell.row == curr.row and best_cell.col == curr.col) and range > 0: 
+            print('range: ', range)
+            borderCells = self.getCellsAtRangeBorder_square(curr, range)
+            if curr_point in borderCellGroups:
+                borderCellGroups[curr_point].append(deepcopy(borderCells))
+            else:
+                borderCellGroups[curr_point] = [deepcopy(borderCells)]
+
+            for next_cell in borderCells:
+                if not self.obstacleInPath(curr, next_cell):
+                    cell_dist_from_end = ((next_cell.row - end.row)**2 + (next_cell.col - end.col)**2)**(1/2)
+                    cell_dist_from_obs = self.distances[next_cell.row, next_cell.col]
+                    
+                    if (((cell_dist_from_end < best_dist_from_end) and (cell_dist_from_obs > 0)) 
+                    or ((cell_dist_from_end == best_dist_from_end) and (cell_dist_from_obs > best_dist_from_obs))):
+                        best_cell = next_cell
+                        best_dist_from_end = cell_dist_from_end
+                        best_dist_from_obs = cell_dist_from_obs
+            # if we get through all the cells and they all have obstacle in path, best_cell should still be set to curr_cell
+            range -= 1
+        if range <= 0:
+            raise Exception('No next step found.')
+        return best_cell
+        
+
+    def traverse_dummy_improved(self, start, end, range, borderCellGroups):
+        """
+        Return a list of Cell objects
+
+        Args:
+        - start:
+        - end:
+        - borderCellGroups: mutable dictionary
+        """
+        if not self.inGrid(start):
+            raise Exception('Start not in grid.') 
+        if not self.inGrid(end):
+            raise Exception('End not in grid.') 
+        
+        start_val = self.distances[start.row, start.col]
+        end_val = self.distances[end.row, end.col]
+
+        if start_val == 0:
+            raise Exception('Start in obstacle. Cannot compute traversal.')
+        if end_val == 0:
+            raise Exception('End in obstacle. Cannot compute traversal.')
+
+        curr_cell = start
+        print(f'first curr cell: ({curr_cell.row}, {curr_cell.col})')
+        cells_traversed = list()
+        #print(f'SDF FIRST first cell: ({cells_traversed[0].row}, {cells_traversed[0].col})')
+        counter = 0
+        while curr_cell != end:
+            cells_traversed.append(deepcopy(curr_cell))
+            #print(f'next cell added: ({curr_cell.row},{curr_cell.col})')
+            print(f'cell at idx {counter}: ({cells_traversed[counter].row},{cells_traversed[counter].col})')
+            curr_cell = deepcopy(self.chooseNextCell_improved(curr_cell, end, range, borderCellGroups))
+            counter += 1
+        
+        print(f'SDF first cell: ({cells_traversed[0].row}, {cells_traversed[0].col})')
+        cells_traversed.append(end)
+
+        
+        return cells_traversed
+
         
 
     def to_numpy(self):
@@ -317,254 +445,102 @@ class SDF:
         return (cell.row >= 0) and (cell.col >= 0) and (cell.row < self.height) and (cell.col < self.width)
         raise NotImplementedError
 
-    #def traverse(self, start, end):
-        """Figure out the cells that the ray from start to end traverses.
-
-        Corner cases that must be accounted for:
-        - If start and end points coincide, return (True, [start cell]).
-        - Check that the start point is inside the grid. Return (False, None) otherwise.
-        - End point can be outside the grid. The ray tracing must stop at the edges of the grid.
-        - Perfectly horizontal and vertical rays.
-        - Ray starts and ends in the same cell.
-
-        Args:
-            start: (Point) Start point of the ray
-            end: (Point) End point of the ray
-
-        Returns:
-            success, raycells: (bool, list of Cell) If the traversal was successful, success is True
-                                and raycells is the list of traversed cells (including the starting
-                                cell). Otherwise, success is False and raycells is None.
-        """
+    def traverse_cells(self, start_cell, end_cell):
         # TODO: Assignment 2, Problem 1.1 (test_traversal)
-        # corner cases
-        if start == end:
-            return (True, self.point_to_cell(start))
-        
-        print("Starting Point and Cell: ")
-        print(start)
-        sCell = self.point_to_cell(start)
-        if not self.inQ(sCell):
+
+        if ((start_cell.row == end_cell.row and start_cell.col == end_cell.col)):
+            #print('ONE CELL')
+            return (True, [start_cell])
+
+        if not self.inGrid(start_cell):
             return (False, None)
-        print(self.cell_to_point(sCell))
 
-        print("Ending Point and Cell")
-        print(end)
-        eCell = self.point_to_cell(end)
-        print(self.cell_to_point(eCell))
-        dir = end - start
-        print("Direction: ", dir)
-        # determine what direction ray is going
-        
+        raycells = list()
 
-        cCell = sCell
-        p_relative = start - self.cell_to_point(self.point_to_cell(start))
+        #raycells.append(Cell(start_cell.row, start_cell.col))
+        curr_cell = start_cell
 
-        print('Resolution: ', self.resolution)
-        cells = [sCell]
-        while (cCell.row != eCell.row) or (cCell.col != eCell.col):
-            # test for out of bounds
-            if not self.inQ(cCell):
-                break
-            print('Current Cell: ', self.cell_to_point(cCell))
-            print('End Cell: ', self.cell_to_point(eCell))
-            print('P absolute: ', p_relative + self.cell_to_point(cCell))
-            print('P relative: ', p_relative)
+        x0 = start_cell.col + 0.5
+        y0 = start_cell.row + 0.5
+        x1 = end_cell.col + 0.5
+        y1 = end_cell.row + 0.5
+        o = np.array([x0, y0]).reshape(2, 1)
+        e = np.array([x1, y1]).reshape(2, 1)
+        diff = np.subtract(e, o)
 
-            if dir.x >= 0:
-                print('right')
-                step_col =  1
-                dx = self.resolution - p_relative.x
-            else:
-                print('left')
-                step_col = -1
-                dx = -p_relative.x
-            if dir.y >= 0:
-                print('up')
-                step_row =  1
-                dy = self.resolution - p_relative.y
-            else:
-                print('down')
-                step_row = -1
-                dy = -p_relative.y
+        #print('e - o: ', diff)
 
-            # given direction and position, determine what side of cell is crossed
-            cellCorner = self.cell_to_point(cCell)
-            #print('tx, ty: ', dx/dir.x, ', ', dy/dir.y)
-            if dir.x == 0:
-                print('vertical')
-                nextCell = Cell(cCell.row + step_row, cCell.col)
-                p_relative = Point(p_relative.x + dy * dir.x / dir.y, 0.5 * (self.resolution - self.resolution * step_row))
-            elif dir.y == 0:
-                print('horizontal')
-                nextCell = Cell(cCell.row, cCell.col + step_col)
-                p_relative = Point(0.5 * (self.resolution - self.resolution * step_col), p_relative.y + dx * dir.y / dir.x)
-            elif (dx/dir.x) < (dy/dir.y):    #will cross horizontally
-                print('horizontal')
-                nextCell = Cell(cCell.row, cCell.col + step_col)
-                p_relative = Point(0.5 * (self.resolution - self.resolution * step_col), p_relative.y + dx * dir.y / dir.x)
-            elif (dx/dir.x) >= (dy/dir.y): #will cross vertically
-                print('vertical')
-                nextCell = Cell(cCell.row + step_row, cCell.col)
-                p_relative = Point(p_relative.x + dy * dir.x / dir.y, 0.5 * (self.resolution - self.resolution * step_row))
-            cells.append(cCell)
-            cCell = nextCell
-            print("Input something to step to next cell")
-            #x = input()
-        cells.append(eCell)
-        return (True, cells)
-        raise NotImplementedError
+        dir = diff * (1.0 / np.linalg.norm(diff)) 
 
-    def traverse(self, start, end):
-        """Figure out the cells that the ray from start to end traverses.
+        dx = dir[0][0]
+        dy = dir[1][0]
 
-        Corner cases that must be accounted for:
-        - If start and end points coincide, return (True, [start cell]).
-        - Check that the start point is inside the grid. Return (False, None) otherwise.
-        - End point can be outside the grid. The ray tracing must stop at the edges of the grid.
-        - Perfectly horizontal and vertical rays.
-        - Ray starts and ends in the same cell.
 
-        Args:
-            start: (Point) Start point of the ray
-            end: (Point) End point of the ray
+        step_col = None
+        step_row = None
 
-        Returns:
-            success, raycells: (bool, list of Cell) If the traversal was successful, success is True
-                                and raycells is the list of traversed cells (including the starting
-                                cell). Otherwise, success is False and raycells is None.
-        """
-        # TODO: Assignment 2, Problem 1.1 (test_traversal)
-        raycells = []
-
-        c_start = self.point_to_cell(start)
-        c_end = self.point_to_cell(end)
-        #print('end point: ', end.x, end.y)
-        #print('end cell: ', c_end)
-
-        c = Cell()
-        c = c_start
-
-        # Comment: Make sure the start point is in the map
-        if not self.inQ(c_start):
-            print('Start point is not in the grid.')
-            return False, None
-
-        # Comment: Don't check the end point, we will terminate once the ray leaves the map.
-        if start == end:
-            return (True, [self.point_to_cell(start)])
-
-        # Comment: Corner cases: Horizontal and vertical rays
-        # Comment: Solution: Use two booleans to track whether to search along rows, cols, or both
-        search_row = True
-        if c_start.row == c_end.row: # Uncomment this and fill out if condition
-            search_row = False
-        search_col = True
-        if c_start.col == c_end.col:
-            search_col = False
-
-        # Comment: Corner case: Ray is in only one cell
-        # Comment Solution: Return the starting cell
-        # TODO: fill me in
-        if ((not search_row) and (not search_col)):
-            return True, self.point_to_cell(start)
-
-        mag = abs(end - start)
-        dir = (end - start) / mag
-
-        cb = self.cell_to_point(c)
-
-        step_col = -1
-        if dir.x > 0.0:
+        if dx > 0:
             step_col = 1
+        elif dx == 0:
+            step_col = 0
+        else:
+            step_col = -1
 
-        step_row = -1
-        if dir.y > 0.0:
+        if dy > 0:
             step_row = 1
+        elif dy == 0:
+            step_row = 0
+        else:
+            step_row = -1 
 
-        tmax = Point()
-        tdelta = Point()
+        #c_b = self.cell_to_point(start_cell)
+        c_bx = start_cell.col
+        c_by = start_cell.row
 
-        if search_col:
-            tdelta.x = self.resolution * float(step_col) * (1.0 / dir.x)
-            if step_col == 1:
-                tmax.x = (self.resolution - (start.x - cb.x)) * (1.0 / dir.x)
-            elif step_col == -1:
-                tmax.x = (cb.x - start.x) * (1.0 / dir.x) #will be negative to match negative tdelta.x
+        alpha = 1
+
+        o_x = o[0][0]
+        o_y = o[1][0]
+
+
+        tDeltaX = alpha * float(step_col) * (1.0/dx) if dx != 0 else 0
+        tDeltaY = alpha * float(step_row) * (1.0/dy) if dy != 0 else 0
+
+
+        tMaxX = None
+        tMaxY = None
+
+        if dx > 0.0:
+            tMaxX = (c_bx + alpha - o_x) * (1.0 / dx)
+        elif dx == 0:
+            tMaxX = np.inf
+        else:
+            tMaxX = (c_bx - o_x) * (1.0 / dx)
+
+        if dy > 0.0:
+            tMaxY = (c_by + alpha - o_y) * (1.0 / dy)
+        elif dy == 0:
+            tMaxY = np.inf
+        else:
+            tMaxY = (c_by - o_y) * (1.0 / dy)
+
+        while ((curr_cell.row != end_cell.row) or (curr_cell.col != end_cell.col)) and self.inGrid(curr_cell):
+            #print(curr_cell)
+            raycells.append(Cell(curr_cell.row, curr_cell.col))
+
+            if tMaxX < tMaxY:
+                curr_cell.col += step_col
+                tMaxX = tMaxX + tDeltaX
+
             else:
-                print('smthn is wrong')
+                curr_cell.row += step_row
+                tMaxY = tMaxY + tDeltaY
 
-        if search_row:
-            tdelta.y = self.resolution * float(step_row) * (1.0 / dir.y)
-            if step_row == 1:
-                tmax.y = (self.resolution - (start.y - cb.y)) * (1.0 / dir.y)
-            elif step_row == -1:
-                tmax.y = (cb.y - start.y) * (1.0 / dir.y) #will be negative to match negative tdelta.y
-            else:
-                print('smthn is wrong')
+        if self.inGrid(end_cell):
+            raycells.append(end_cell)
 
-        #print("tmax's are: ", tmax.x, tmax.y)
+        return (True, raycells)
 
-
-        while True: # uncomment this
-            #print(np.array([a.to_numpy() for a in raycells]))
-            # Invalid cell reached; exit with the currently traversed cells.
-            if not self.inQ(c):
-                return True, raycells
-
-            # Add c to the traversed cells
-            # TODO: Fill me in
-            #print('cell: ', c)
-            raycells.append(Cell(c.row, c.col))
-
-
-            # Escape after inserting the end cell once
-            # TODO: Fill me in
-            if c == c_end:
-                break
-            
-            # Escape after detecting occupied cell
-            if self.occupiedQ(c):
-                break
-
-            # Update type
-            # ROW: Take a step along the row.
-            # COL: Take a step along the column.
-            # TODO: Fill me in -- how to decide whether to step along
-            # row or step along column
-
-
-            if search_col and search_row: #sloped ray
-
-                if  (abs(tmax.x) < abs(tmax.y)): # crosses horizontally first
-                    tmax.x += tdelta.x
-                    update_row = False
-                    update_col = True
-                else:                 # crosses vertically first
-                    tmax.y += tdelta.y
-                    update_row = True
-                    update_col = False
-            elif search_col and not search_row: #horizontal ray
-                tmax.x += tdelta.x
-                update_row = False
-                update_col = True
-            elif search_row and not search_col:
-                tmax.y += tdelta.y
-                update_row = True
-                update_col = False
-            else:
-                print('u fucked up')
-
-            # Take a step and update the current cell
-            if update_row:
-                c.row = c.row + step_row
-            elif update_col:
-                c.col = c.col + step_col
-            else:
-                print('Undefined behavior during traversal.')
-                return False, None
-            
-        return True, raycells
 
     def freeQ(self, cell):
         """Is the cell free? Return True if yes, False otherwise."""
