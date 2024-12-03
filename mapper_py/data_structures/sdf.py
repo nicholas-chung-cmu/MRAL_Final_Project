@@ -569,11 +569,21 @@ class SDF:
         return value > self.free_thres or value < self.occ_thres
         raise NotImplementedError
     
-    ############################
-    ### BEGIN TUPLE VERSIONs ###
-    ############################
+    ###################################################################
+    ### MOST UP-TO-DATE FUNCTIONS FOR PATH PLANNING CODE BEGIN HERE ###
+    ###################################################################
     
     def getCellsAtRangeBorder_sensor(self, curr, range):
+        """
+        Gets the cells (in tuple form) at the border of a circle with radius = range.
+
+        Args:
+        - curr: centered cell in tuple form (row, col)
+        - range: range of border circle, i.e. the radius (will be cast to a float)
+
+        Returns:
+        - cells: list of tuple cells (row, col) that lie at the circular border of the range
+        """
         cells = list()
         (crow, ccol) = (curr[0], curr[1])
 
@@ -597,7 +607,16 @@ class SDF:
 
     
     def obstacleInPath(self, curr, next):
-        #print(f'curr point: ({curr.row}, {curr.col})')
+        """
+        Determines if an obstacle is in the line-path from one cell to another.
+
+        Args:
+        - curr: starting cell in tuple form (row, col)
+        - next: target cell in tuple form (row, col)
+
+        Returns:
+        - Boolean value - True if an obstacle is in the path, False if no obstacles in path
+        """
         traversal = self.traverse_cells(curr, next)
         cellsTraversed = traversal[1]
 
@@ -612,11 +631,17 @@ class SDF:
 
     def chooseNextCell_improved(self, curr, end, range, borderCellGroups):
         """
-        uhhh
+        Selects the next cell to traverse to in order to get closer to the end target.
         
         Args:
-        - curr: tuple cell
-        - end: tuple cell
+        - curr: current cell occupied in tuple form (row, col)
+        - end: target ending cell in tuple form (row, col)
+        - range: max range of the sensor (int or float)
+        - borderCellGroups: mutable dictionary matching tuple cell keys to a list of groups of border cells referenced; 
+                            e.g. [(row, col): [[borderCellsAtMaxRange], [borderCellsAtSmallerRange]...]]
+        
+        Returns:
+        - best_cell: chosen cell to traverse to in tuple form (row, col)
         """
         (crow, ccol) = (curr[0], curr[1])
         (erow, ecol) = (end[0], end[1])
@@ -627,9 +652,11 @@ class SDF:
         best_dist_from_obs = 0
         
         curr_dist_from_end = int(((crow - erow)**2 + (ccol - ecol)**2)**(1/2))
-        range = min(range, curr_dist_from_end)
+        range = min(range, curr_dist_from_end) # if end is already within range, don't use the max range of the sensor.
 
-        # i.e. pointing at the same address if just best_cell = curr) ??
+        # Below while loop should continue iterating until a "best_cell" is found.
+        # If no suitable cell is found at the current range, the range will decrease, 
+        # and the while loop will try again. 
         while best_cell == curr and range > 0: 
             print('range: ', range)
             print('curr: ', curr)
@@ -653,10 +680,10 @@ class SDF:
                         best_cell = next_cell
                         best_dist_from_end = cell_dist_from_end
                         best_dist_from_obs = cell_dist_from_obs
-               # else:
-                    #print(f'obstacle found between: {next_cell} and {end}.')
             # if we get through all the cells and they all have obstacle in path, best_cell should still be set to curr_cell
+            # at this point we know that there are no suitable cells at this range, so we try a smaller range. 
             range -= 1
+    
         if range < 0:
             raise Exception('No next step found.')
         return best_cell
@@ -664,12 +691,19 @@ class SDF:
 
     def traverse_dummy_improved(self, start, end, range, borderCellGroups):
         """
-        Return a list of Cell objects
+        Determines all cells traversed in path from starting cell to ending target cell.
 
         Args:
-        - start: tuple cell
-        - end: tuple cell
-        - borderCellGroups: mutable dictionary
+        - start: starting cell in tuple form (row, col)
+        - end: target ending cell in tuple form (row, col)
+        - range: max range of the sensor (int or float)
+        - borderCellGroups: mutable dictionary matching tuple cell keys to a list of groups of border cells referenced; 
+                            e.g. [(row, col): [[borderCellsAtMaxRange], [borderCellsAtSmallerRange]...]]
+        
+        Returns:
+        - cells_traversed: list of all cells traversed in the path in tuple form;
+                            e.g. [(row0, col0), (row1, col1), (row2, col2),...]
+        
         """
         if not self.inGrid(start):
             raise Exception('Start not in grid.') 
@@ -705,7 +739,19 @@ class SDF:
     
     
     def traverse_cells(self, start_cell, end_cell):
-        # TODO: Assignment 2, Problem 1.1 (test_traversal)
+        """
+        Determines all cells passed through in the line from the center of a starting cell to the center of an ending cell.
+
+        Args:
+        - start_cell: starting cell in tuple form (row, col)
+        - end_cell: ending cell in tuple form (row, col)
+
+        Returns:
+        - Tuple of a Boolean and a list (bool, raycells);
+            - Boolean returns True if a traversal is successful and False if not
+            - raycells: list of all cells traversed in a line from start to end cell in tuple form;
+                        e.g. [(row0, col0), (row1, col1), (row2, col2),...]
+        """
 
         (srow, scol) = (start_cell[0], start_cell[1])
         (erow, ecol) = (end_cell[0], end_cell[1])

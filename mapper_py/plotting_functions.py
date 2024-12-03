@@ -139,7 +139,11 @@ def highlight_referenced_cells_incrementally(sdf, cells_groups, steps):
         
         plt.show()
         counter += step_size
-    
+
+###################################################################################
+# MOST UP-TO-DATE VERSION OF INCREMENTAL PLOTTING OF PATH-FINDING ALGORITHM BELOW #
+###################################################################################
+
 def trace_traversal_with_sensor(sdf, points, cells_with_sensor, steps):
     #print('points: ', points)
     num_points = len(points)
@@ -161,8 +165,10 @@ def trace_traversal_with_sensor(sdf, points, cells_with_sensor, steps):
         prev_cell_tuple = (((int) (prev_point[1] - 0.5)), ((int) (prev_point[0] - 0.5)))
         prev_cell_sensor_readings = cells_with_sensor[prev_cell_tuple]
         num_groups = len(prev_cell_sensor_readings)
-        print('num_groups: ', num_groups)
         counter2 = 0
+
+        # Below while loop should draw the path up until prev_point, 
+        # and then highlight all border cells considered until the next point (curr_point) is selected.
         while counter2 < num_groups:
             fig, ax = draw_obstacles_from_SDF(sdf)
 
@@ -187,14 +193,11 @@ def trace_traversal_with_sensor(sdf, points, cells_with_sensor, steps):
             counter2 += 1
 
         # draw chosen point (curr)
-        print('prev point: ', prev_point)
-        print('curr_point: ', curr_point)
         (prev_point_row, prev_point_col) = prev_point
         (curr_point_row, curr_point_col) = curr_point
         ax.plot([prev_point_row, curr_point_row], [prev_point_col, curr_point_col], color='red')      
         plt.show()
         counter += step_size
-        print('total num points: ', num_points, '; counter after increment: ', counter)
     
     # plot final trajectory
     fig_final, ax_final = draw_obstacles_from_SDF(sdf)

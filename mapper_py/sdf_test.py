@@ -17,7 +17,8 @@ def test_sdf(grid):
     print(np.count_nonzero(sdf.distances == -1))
 
     # drawing grids
-    #(fig1, ax1) = draw_grid(np.flipud(sdf.distances), sdf.rows, sdf.cols, 'SDF Grid', 'Greys_r')
+    (fig1, ax1) = draw_grid(np.flipud(sdf.distances), sdf.rows, sdf.cols, 'SDF Grid', 'Greys_r')
+    plt.show()
     #ax1.add_patch(plt.Rectangle((5,5), 1, 1, color='yellow')) #test
     (fig2, ax2) = draw_obstacles_from_SDF(sdf)
     plt.close()
@@ -29,7 +30,7 @@ def test_sdf(grid):
     # startCell = Cell(0, 4)
     # targetCell = Cell(31, 23)
 
-    # FOR TUPLE VERSION TO RUN
+    # FOR TUPLE VERSION TO RUN (b/c python automatically selects functions of the same name by matching argument types)
     startCell = (0, 4)
     targetCell = (31, 23)
 
