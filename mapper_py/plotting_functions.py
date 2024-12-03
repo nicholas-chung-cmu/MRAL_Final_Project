@@ -97,10 +97,10 @@ def convert_cells_to_points(cells):
 
 def convert_tuple_cells_to_points(cells):
     """
-    Converts a list of cells to a list of tuples such that each point is centered in each cell.
+    Converts a set of cells to a list of tuples such that each point is centered in each cell.
 
     Args:
-    - cells: list of Cell objects 
+    - cells: list of 
     """
     points = list()
 
@@ -174,7 +174,7 @@ def trace_traversal_with_sensor(sdf, points, cells_with_sensor, steps):
 
             # plot start and end points
             ax.plot(first_point_x, first_point_y, marker='o', color='red')
-            ax.plot(end_point_x, end_point_y, marker='o', color='red')
+            ax.plot(end_point_x, end_point_y, marker='o', markerfacecolor='none', markeredgecolor='red')
 
             # draw all lines up to this cell
             for i in range(0, counter-1, 1):
@@ -202,7 +202,7 @@ def trace_traversal_with_sensor(sdf, points, cells_with_sensor, steps):
     # plot final trajectory
     fig_final, ax_final = draw_obstacles_from_SDF(sdf)
     ax_final.plot(first_point_x, first_point_y, marker='o', color='red')
-    ax_final.plot(end_point_x, end_point_y, marker='o', color='red')
+    ax_final.plot(end_point_x, end_point_y, marker='o', markerfacecolor='none', markeredgecolor='red')
     for i in range(num_points-1):
         (x0, y0) = points[i]
         (x1, y1) = points[i+1]

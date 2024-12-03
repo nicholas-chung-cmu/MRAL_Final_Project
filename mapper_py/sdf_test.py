@@ -23,25 +23,23 @@ def test_sdf(grid):
     (fig2, ax2) = draw_obstacles_from_SDF(sdf)
     plt.close()
 
-    # fig1.show()
-    # fig2.show()
+    test_path_finding(sdf, (31, 23), (37, 8), 25)
+    test_path_finding(sdf, (31, 23), (37, 8), 5)
+    test_path_finding(sdf, (0, 4), (31, 23), 25)
+    test_path_finding(sdf, (0, 2), (37, 8), 25)
+
+def test_path_finding(sdf, start, end, sensor_range):
+    """
+    Tests and plots path finding algorithm, with each step plotted.
     
-    # a test case that works for both grids
-    # startCell = Cell(0, 4)
-    # targetCell = Cell(31, 23)
-
-    # FOR TUPLE VERSION TO RUN (b/c python automatically selects functions of the same name by matching argument types)
-    startCell = (0, 4)
-    targetCell = (31, 23)
-
+    Args:
+    - start: start cell in tuple from (row, col)
+    - end: end cell in tuple form (row, col)
+    - sensor_range: max range of sensor
+    """
     borderCellGroups = dict()
-    traversedCells = sdf.traverse_dummy_improved(startCell, targetCell, 50, borderCellGroups)
+    traversedCells = sdf.traverse_dummy_improved(start, end, sensor_range, borderCellGroups)
     traversedPoints = convert_tuple_cells_to_points(traversedCells) 
-    # print('rows: ', sdf.rows, '; cols: ', sdf.cols) # prints for debugging purposes
-    #print('points: ', traversedPoints)
-    #draw_lines_on_grid_from_cells(ax1, traversedCells)
-    #draw_lines_on_grid_incrementally(sdf, traversedCells, 5)
-    #highlight_referenced_cells_incrementally(sdf, borderCellGroups, 5)
     trace_traversal_with_sensor(sdf, traversedPoints, borderCellGroups, len(traversedPoints)-1)
 
 

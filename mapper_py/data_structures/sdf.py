@@ -591,9 +591,9 @@ class SDF:
         - range: range of border circle, i.e. the radius (will be cast to a float)
 
         Returns:
-        - cells: list of tuple cells (row, col) that lie at the circular border of the range
+        - cells: set of tuple cells (row, col) that lie at the circular border of the range
         """
-        cells = list()
+        cells = set()
         (crow, ccol) = (curr[0], curr[1])
 
         sensor = Sensor(1, max(20, range**2))
@@ -611,7 +611,7 @@ class SDF:
             #print(f'point: ({point.x},{point.y})')
             cell = (row, col)
             if self.inGrid(cell):
-                cells.append(cell)
+                cells.add(cell)
         return cells
 
     
@@ -628,6 +628,7 @@ class SDF:
         """
         traversal = self.traverse_cells(curr, next)
         cellsTraversed = traversal[1]
+        #print('cells traversed: ', cellsTraversed)
 
         if cellsTraversed == None:
             raise Exception('huh???')
@@ -635,6 +636,7 @@ class SDF:
         for cell in cellsTraversed:
             crow, ccol = (cell[0], cell[1])
             if self.distances[crow, ccol] == 0:
+                #print('OBSTACLE FOUND???')
                 return True
         return False
 
@@ -667,33 +669,39 @@ class SDF:
         # If no suitable cell is found at the current range, the range will decrease, 
         # and the while loop will try again. 
         while best_cell == curr and range > 0: 
-            print('range: ', range)
-            print('curr: ', curr)
+            # print('range: ', range)
+            # print('curr: ', curr)
             borderCells = self.getCellsAtRangeBorder_sensor(curr, range)
             #print('border cells: ', borderCells)
             if curr in borderCellGroups:
                 borderCellGroups[curr].append(deepcopy(borderCells))
             else:
                 borderCellGroups[curr] = [deepcopy(borderCells)]
-           # print('num border cells: ', len(borderCells))
-            for next_cell in borderCells:
-                (nrow, ncol) = (next_cell[0], next_cell[1])
-                if not self.obstacleInPath(curr, next_cell) and not self.obstacleInPath(next_cell, end):
-                    #print('no obstacle found yay')
-                    cell_dist_from_end = ((nrow - erow)**2 + (ncol - ecol)**2)**(1/2)
-                    cell_dist_from_obs = self.distances[nrow, ncol]
-                    
-                    if (((cell_dist_from_end < best_dist_from_end) and (cell_dist_from_obs > 0)) 
-                    or ((cell_dist_from_end == best_dist_from_end) and (cell_dist_from_obs > best_dist_from_obs))):
-                        #print('CHANGING BEST CELL')
-                        best_cell = next_cell
-                        best_dist_from_end = cell_dist_from_end
-                        best_dist_from_obs = cell_dist_from_obs
+            #print('num border cells: ', len(borderCells))
+            for next_cell in borderCells: 
+                # don't go to a cell that you've already been to?
+                if next_cell not in borderCellGroups:
+                    (nrow, ncol) = (next_cell[0], next_cell[1])
+
+                    # if end is farther from range, dont worry about second not
+                    if not self.obstacleInPath(curr, next_cell):
+                    # print('no obstacle found yay')
+                        cell_dist_from_end = ((nrow - erow)**2 + (ncol - ecol)**2)**(1/2)
+                        cell_dist_from_obs = self.distances[nrow, ncol]
+
+                        if (cell_dist_from_end <= range and not self.obstacleInPath(next_cell, end)) or cell_dist_from_end > range:
+                            #print('cell dist from end: ', cell_dist_from_end)
+                            if (((cell_dist_from_end < best_dist_from_end) and (cell_dist_from_obs > 0)) 
+                            or ((cell_dist_from_end == best_dist_from_end) and (cell_dist_from_obs > best_dist_from_obs))):
+                                #print('CHANGING BEST CELL')
+                                best_cell = next_cell
+                                best_dist_from_end = cell_dist_from_end
+                                best_dist_from_obs = cell_dist_from_obs
             # if we get through all the cells and they all have obstacle in path, best_cell should still be set to curr_cell
             # at this point we know that there are no suitable cells at this range, so we try a smaller range. 
             range -= 1
     
-        if range < 0:
+        if best_cell == curr:
             raise Exception('No next step found.')
         return best_cell
         
@@ -730,18 +738,18 @@ class SDF:
             raise Exception('End in obstacle. Cannot compute traversal.')
 
         curr_cell = start
-        print(f'first curr cell: ({curr_cell[0]}, {curr_cell[1]})')
+        #print(f'first curr cell: ({curr_cell[0]}, {curr_cell[1]})')
         cells_traversed = list()
         #print(f'SDF FIRST first cell: ({cells_traversed[0].row}, {cells_traversed[0].col})')
         counter = 0
         while curr_cell != end:
             cells_traversed.append(curr_cell)
             #print(f'next cell added: ({curr_cell.row},{curr_cell.col})')
-            print(f'cell at idx {counter}: ({cells_traversed[counter][0]},{cells_traversed[counter][1]})')
+            #print(f'cell at idx {counter}: ({cells_traversed[counter][0]},{cells_traversed[counter][1]})')
             curr_cell = self.chooseNextCell_improved(curr_cell, end, range, borderCellGroups)
             counter += 1
         
-        print(f'SDF first cell: ({cells_traversed[0][0]}, {cells_traversed[0][1]})')
+        #print(f'SDF first cell: ({cells_traversed[0][0]}, {cells_traversed[0][1]})')
         cells_traversed.append(end)
         
         return cells_traversed
