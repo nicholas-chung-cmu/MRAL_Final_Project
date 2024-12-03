@@ -439,11 +439,6 @@ class SDF:
     def inGrid(self, cell):
         return (cell.row >= 0) and (cell.col >= 0) and (cell.row < self.rows) and (cell.col < self.cols)
     
-    # with tuple
-    def inGrid(self, cell):
-        (crow, ccol) = (cell[0], cell[1])
-        return (crow >= 0) and (ccol >= 0) and (crow < self.rows) and (ccol < self.cols)
-    
     def inQ(self, cell):
         """Is the cell inside this grid? Return True if yes, False otherwise."""
         # TODO: Assignment 2, Problem 1.1 (test_traversal)
@@ -572,6 +567,20 @@ class SDF:
     ###################################################################
     ### MOST UP-TO-DATE FUNCTIONS FOR PATH PLANNING CODE BEGIN HERE ###
     ###################################################################
+
+    # with tuple
+    def inGrid(self, cell):
+        """
+        Determines whether the cell is in the grid bounds or not.
+
+        Args:
+        - cell: cell in tuple form (row, col)
+        
+        Returns:
+        - Boolean that is True if the cell is in the grid and False if the cell is outside of grid boundaries.
+        """
+        (crow, ccol) = (cell[0], cell[1])
+        return (crow >= 0) and (ccol >= 0) and (crow < self.rows) and (ccol < self.cols)
     
     def getCellsAtRangeBorder_sensor(self, curr, range):
         """
