@@ -169,7 +169,7 @@ class SDF:
     def getCellsAtRangeBorder_sensor(self, curr, range):
         cells = list()
 
-        sensor = Sensor(range, range)
+        sensor = Sensor(range, range*2)
         angles = np.linspace(0, 2.0 * np.pi, sensor.num_rays, False)
         rays = list()
         (x, y) = (curr.col, curr.row)
@@ -577,7 +577,7 @@ class SDF:
         cells = list()
         (crow, ccol) = (curr[0], curr[1])
 
-        sensor = Sensor()
+        sensor = Sensor(1, max(20, range**2))
         angles = np.linspace(0, 2.0 * np.pi, sensor.num_rays, False)
         rays = list()
         (x, y) = (ccol + 0.5, crow + 0.5)

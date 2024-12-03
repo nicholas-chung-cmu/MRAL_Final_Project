@@ -152,20 +152,9 @@ def trace_traversal_with_sensor(sdf, points, cells_with_sensor, steps):
     (end_point_x, end_point_y) = points[num_points-1]
 
     while counter < num_points:
-        fig, ax = draw_obstacles_from_SDF(sdf)
-
-        # plot start and end points
-        ax.plot(first_point_x, first_point_y, marker='o', color='red')
-        ax.plot(end_point_x, end_point_y, marker='o', color='red')
 
         prev_point = points[counter-1]
         curr_point = points[counter]
-
-        # draw all lines up to this cell
-        for i in range(0, counter-1, 1):
-            (x0, y0) = points[i]
-            (x1, y1) = points[i+1]
-            ax.plot([x0, x1], [y0, y1], color='red')
         
         # now draw sensor readings (if end hasn't been reached yet)
         #if counter < num_points:
@@ -175,6 +164,17 @@ def trace_traversal_with_sensor(sdf, points, cells_with_sensor, steps):
         print('num_groups: ', num_groups)
         counter2 = 0
         while counter2 < num_groups:
+            fig, ax = draw_obstacles_from_SDF(sdf)
+
+            # plot start and end points
+            ax.plot(first_point_x, first_point_y, marker='o', color='red')
+            ax.plot(end_point_x, end_point_y, marker='o', color='red')
+
+            # draw all lines up to this cell
+            for i in range(0, counter-1, 1):
+                (x0, y0) = points[i]
+                (x1, y1) = points[i+1]
+                ax.plot([x0, x1], [y0, y1], color='red')
             cells = prev_cell_sensor_readings[counter2]
             #print('cells: ', cells)
             cell_coords = list()
