@@ -26,12 +26,16 @@ def test_sdf(grid):
     # fig2.show()
     
     # a test case that works for both grids
-    startCell = Cell(0, 4)
-    targetCell = Cell(31, 23)
+    # startCell = Cell(0, 4)
+    # targetCell = Cell(31, 23)
+
+    # FOR TUPLE VERSION TO RUN
+    startCell = (0, 4)
+    targetCell = (31, 23)
 
     borderCellGroups = dict()
-    traversedCells = sdf.traverse_dummy_improved(startCell, targetCell, 5, borderCellGroups)
-    traversedPoints = convert_cells_to_points(traversedCells) 
+    traversedCells = sdf.traverse_dummy_improved(startCell, targetCell, 50, borderCellGroups)
+    traversedPoints = convert_tuple_cells_to_points(traversedCells) 
     # print('rows: ', sdf.rows, '; cols: ', sdf.cols) # prints for debugging purposes
     #print('points: ', traversedPoints)
     #draw_lines_on_grid_from_cells(ax1, traversedCells)

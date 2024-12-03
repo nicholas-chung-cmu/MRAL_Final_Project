@@ -169,7 +169,7 @@ class SDF:
     def getCellsAtRangeBorder_sensor(self, curr, range):
         cells = list()
 
-        sensor = Sensor()
+        sensor = Sensor(range, range)
         angles = np.linspace(0, 2.0 * np.pi, sensor.num_rays, False)
         rays = list()
         (x, y) = (curr.col, curr.row)
@@ -221,7 +221,7 @@ class SDF:
                 borderCellGroups[curr_point] = [deepcopy(borderCells)]
 
             for next_cell in borderCells:
-                if not self.obstacleInPath(curr, next_cell):
+                if (not self.obstacleInPath(curr, next_cell)) and (not self.obstacleInPath(next_cell, end)):
                     cell_dist_from_end = ((next_cell.row - end.row)**2 + (next_cell.col - end.col)**2)**(1/2)
                     cell_dist_from_obs = self.distances[next_cell.row, next_cell.col]
                     
@@ -439,6 +439,11 @@ class SDF:
     def inGrid(self, cell):
         return (cell.row >= 0) and (cell.col >= 0) and (cell.row < self.rows) and (cell.col < self.cols)
     
+    # with tuple
+    def inGrid(self, cell):
+        (crow, ccol) = (cell[0], cell[1])
+        return (crow >= 0) and (ccol >= 0) and (crow < self.rows) and (ccol < self.cols)
+    
     def inQ(self, cell):
         """Is the cell inside this grid? Return True if yes, False otherwise."""
         # TODO: Assignment 2, Problem 1.1 (test_traversal)
@@ -563,3 +568,238 @@ class SDF:
         value = self.get_cell(cell)
         return value > self.free_thres or value < self.occ_thres
         raise NotImplementedError
+    
+    ############################
+    ### BEGIN TUPLE VERSIONs ###
+    ############################
+    
+    def getCellsAtRangeBorder_sensor(self, curr, range):
+        cells = list()
+        (crow, ccol) = (curr[0], curr[1])
+
+        sensor = Sensor()
+        angles = np.linspace(0, 2.0 * np.pi, sensor.num_rays, False)
+        rays = list()
+        (x, y) = (ccol + 0.5, crow + 0.5)
+        pos = Point(x, y)
+        for angle in angles:
+            rays.append(Ray(pos, Point(np.cos(angle), np.sin(angle))))
+        
+        for ray in rays:
+            point = ray.point_at_dist(float(range))
+            row = int(point.y) # assuming resolution of 1
+            col = int(point.x) 
+            #print(f'point: ({point.x},{point.y})')
+            cell = (row, col)
+            if self.inGrid(cell):
+                cells.append(cell)
+        return cells
+
+    
+    def obstacleInPath(self, curr, next):
+        #print(f'curr point: ({curr.row}, {curr.col})')
+        traversal = self.traverse_cells(curr, next)
+        cellsTraversed = traversal[1]
+
+        if cellsTraversed == None:
+            raise Exception('huh???')
+        
+        for cell in cellsTraversed:
+            crow, ccol = (cell[0], cell[1])
+            if self.distances[crow, ccol] == 0:
+                return True
+        return False
+
+    def chooseNextCell_improved(self, curr, end, range, borderCellGroups):
+        """
+        uhhh
+        
+        Args:
+        - curr: tuple cell
+        - end: tuple cell
+        """
+        (crow, ccol) = (curr[0], curr[1])
+        (erow, ecol) = (end[0], end[1])
+        
+        best_cell = curr
+        (brow, bcol) = (best_cell[0], best_cell[1])
+        best_dist_from_end = 1e6
+        best_dist_from_obs = 0
+        
+        curr_dist_from_end = int(((crow - erow)**2 + (ccol - ecol)**2)**(1/2))
+        range = min(range, curr_dist_from_end)
+
+        # i.e. pointing at the same address if just best_cell = curr) ??
+        while best_cell == curr and range > 0: 
+            print('range: ', range)
+            print('curr: ', curr)
+            borderCells = self.getCellsAtRangeBorder_sensor(curr, range)
+            #print('border cells: ', borderCells)
+            if curr in borderCellGroups:
+                borderCellGroups[curr].append(deepcopy(borderCells))
+            else:
+                borderCellGroups[curr] = [deepcopy(borderCells)]
+           # print('num border cells: ', len(borderCells))
+            for next_cell in borderCells:
+                (nrow, ncol) = (next_cell[0], next_cell[1])
+                if not self.obstacleInPath(curr, next_cell) and not self.obstacleInPath(next_cell, end):
+                    #print('no obstacle found yay')
+                    cell_dist_from_end = ((nrow - erow)**2 + (ncol - ecol)**2)**(1/2)
+                    cell_dist_from_obs = self.distances[nrow, ncol]
+                    
+                    if (((cell_dist_from_end < best_dist_from_end) and (cell_dist_from_obs > 0)) 
+                    or ((cell_dist_from_end == best_dist_from_end) and (cell_dist_from_obs > best_dist_from_obs))):
+                        #print('CHANGING BEST CELL')
+                        best_cell = next_cell
+                        best_dist_from_end = cell_dist_from_end
+                        best_dist_from_obs = cell_dist_from_obs
+               # else:
+                    #print(f'obstacle found between: {next_cell} and {end}.')
+            # if we get through all the cells and they all have obstacle in path, best_cell should still be set to curr_cell
+            range -= 1
+        if range < 0:
+            raise Exception('No next step found.')
+        return best_cell
+        
+
+    def traverse_dummy_improved(self, start, end, range, borderCellGroups):
+        """
+        Return a list of Cell objects
+
+        Args:
+        - start: tuple cell
+        - end: tuple cell
+        - borderCellGroups: mutable dictionary
+        """
+        if not self.inGrid(start):
+            raise Exception('Start not in grid.') 
+        if not self.inGrid(end):
+            raise Exception('End not in grid.') 
+        
+        (srow, scol) = (start[0], start[1])
+        (erow, ecol) = (end[0], end[1])
+        start_val = self.distances[srow, scol]
+        end_val = self.distances[erow, ecol]
+
+        if start_val == 0:
+            raise Exception('Start in obstacle. Cannot compute traversal.')
+        if end_val == 0:
+            raise Exception('End in obstacle. Cannot compute traversal.')
+
+        curr_cell = start
+        print(f'first curr cell: ({curr_cell[0]}, {curr_cell[1]})')
+        cells_traversed = list()
+        #print(f'SDF FIRST first cell: ({cells_traversed[0].row}, {cells_traversed[0].col})')
+        counter = 0
+        while curr_cell != end:
+            cells_traversed.append(curr_cell)
+            #print(f'next cell added: ({curr_cell.row},{curr_cell.col})')
+            print(f'cell at idx {counter}: ({cells_traversed[counter][0]},{cells_traversed[counter][1]})')
+            curr_cell = self.chooseNextCell_improved(curr_cell, end, range, borderCellGroups)
+            counter += 1
+        
+        print(f'SDF first cell: ({cells_traversed[0][0]}, {cells_traversed[0][1]})')
+        cells_traversed.append(end)
+        
+        return cells_traversed
+    
+    
+    def traverse_cells(self, start_cell, end_cell):
+        # TODO: Assignment 2, Problem 1.1 (test_traversal)
+
+        (srow, scol) = (start_cell[0], start_cell[1])
+        (erow, ecol) = (end_cell[0], end_cell[1])
+
+        if ((srow == erow and scol == ecol)):
+            #print('ONE CELL')
+            return (True, [start_cell])
+
+        if not self.inGrid(start_cell):
+            return (False, None)
+
+        raycells = list()
+
+        #raycells.append(Cell(start_cell.row, start_cell.col))
+        curr_cell = start_cell
+        (crow, ccol) = (curr_cell[0], curr_cell[1])
+
+        x0 = scol + 0.5
+        y0 = srow + 0.5
+        x1 = ecol + 0.5
+        y1 = erow + 0.5
+        o = np.array([x0, y0]).reshape(2, 1)
+        e = np.array([x1, y1]).reshape(2, 1)
+        diff = np.subtract(e, o)
+
+        #print('e - o: ', diff)
+
+        dir = diff * (1.0 / np.linalg.norm(diff)) 
+
+        dx = dir[0][0]
+        dy = dir[1][0]
+
+
+        step_col = None
+        step_row = None
+
+        if dx > 0:
+            step_col = 1
+        elif dx == 0:
+            step_col = 0
+        else:
+            step_col = -1
+
+        if dy > 0:
+            step_row = 1
+        elif dy == 0:
+            step_row = 0
+        else:
+            step_row = -1 
+
+        #c_b = self.cell_to_point(start_cell)
+        c_bx = scol
+        c_by = srow
+
+        alpha = 1 # assuming grid resolution = 1
+
+        o_x = o[0][0]
+        o_y = o[1][0]
+
+
+        tDeltaX = alpha * float(step_col) * (1.0/dx) if dx != 0 else 0
+        tDeltaY = alpha * float(step_row) * (1.0/dy) if dy != 0 else 0
+
+
+        tMaxX = None
+        tMaxY = None
+
+        if dx > 0.0:
+            tMaxX = (c_bx + alpha - o_x) * (1.0 / dx)
+        elif dx == 0:
+            tMaxX = np.inf
+        else:
+            tMaxX = (c_bx - o_x) * (1.0 / dx)
+
+        if dy > 0.0:
+            tMaxY = (c_by + alpha - o_y) * (1.0 / dy)
+        elif dy == 0:
+            tMaxY = np.inf
+        else:
+            tMaxY = (c_by - o_y) * (1.0 / dy)
+
+        while ((crow != erow) or (ccol != ecol)) and self.inGrid(curr_cell):
+            #print(curr_cell)
+            raycells.append((crow, ccol))
+
+            if tMaxX < tMaxY:
+                ccol += step_col
+                tMaxX = tMaxX + tDeltaX
+
+            else:
+                crow += step_row
+                tMaxY = tMaxY + tDeltaY
+
+        if self.inGrid(end_cell):
+            raycells.append(end_cell)
+
+        return (True, raycells)

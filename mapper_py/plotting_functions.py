@@ -95,6 +95,24 @@ def convert_cells_to_points(cells):
 
     return points
 
+def convert_tuple_cells_to_points(cells):
+    """
+    Converts a list of cells to a list of tuples such that each point is centered in each cell.
+
+    Args:
+    - cells: list of Cell objects 
+    """
+    points = list()
+
+    #print(f'first cell: ({cells[0].row}, {cells[0].col})')
+    for i in range(len(cells)):
+        cell = cells[i]
+        (crow, ccol) = (cell[0], cell[1])
+        cell_to_tuple = (ccol + 0.5, crow + 0.5)
+        points.append(cell_to_tuple)
+
+    return points
+
 def draw_lines_on_grid_from_cells(ax, cells):
     points = convert_cells_to_points(cells)
     draw_lines_on_grid_from_points(ax, points)
@@ -123,6 +141,7 @@ def highlight_referenced_cells_incrementally(sdf, cells_groups, steps):
         counter += step_size
     
 def trace_traversal_with_sensor(sdf, points, cells_with_sensor, steps):
+    #print('points: ', points)
     num_points = len(points)
     counter = 1
 
@@ -153,18 +172,20 @@ def trace_traversal_with_sensor(sdf, points, cells_with_sensor, steps):
         prev_cell_tuple = (((int) (prev_point[1] - 0.5)), ((int) (prev_point[0] - 0.5)))
         prev_cell_sensor_readings = cells_with_sensor[prev_cell_tuple]
         num_groups = len(prev_cell_sensor_readings)
+        print('num_groups: ', num_groups)
         counter2 = 0
         while counter2 < num_groups:
             cells = prev_cell_sensor_readings[counter2]
             #print('cells: ', cells)
             cell_coords = list()
             for cell in cells:
-                cell_coords.append((cell.row, cell.col))
+                cell_coords.append(cell)
             for row, col in cell_coords:
                 # b/c x = col & y = row
                 ax.add_patch(plt.Rectangle((col, row), 1, 1, color='yellow'))
             plt.show()
             counter2 += 1
+
         # draw chosen point (curr)
         print('prev point: ', prev_point)
         print('curr_point: ', curr_point)
