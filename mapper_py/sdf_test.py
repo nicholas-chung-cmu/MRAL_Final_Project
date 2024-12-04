@@ -7,108 +7,116 @@ from matplotlib.ticker import MultipleLocator
 
 from data_structures.grid import Grid2D, Point, Cell
 from data_structures.sdf import SDF
+from data_structures.robot import Robot
 from utils import png_to_grid2d, visualize
 
 from plotting_functions import *
 
-def test_sdf(grid):
+def test(map_name, grid_visible=True):
+    '''
+    overall test file
+    input:
+    map_name: string of map png filename
+    '''
+    np.set_printoptions(threshold = np.inf)
+    np.set_printoptions(linewidth = np.inf)
+    
+    #test_sdf(map_name)
+    #test_robot(map_name, (31, 23), (37, 8))
+    #test_robot(map_name, (31, 23), (37, 8))
+    test_robot(map_name, (0, 4), (6, 23))
+    test_robot(map_name, (0, 2), (37, 8))
+
+    #rows = grid.height
+    #cols = grid.width
+
+def test_sdf(map_name):
+    '''
+    pathfinding with absolute knowledge
+    '''
+
+    # path for belle
+    #png_map_path = rf'C:\Users\litin\OneDrive\Desktop\MRAL_Final_Project\mapper_py\test_data\{map_name}.png'
+    
+    # path for nick
+    png_map_path = "test_data/" + map_name + ".png"
+    grid = Grid2D(0.5, 30, 40, 0.001, 0.999)
+    grid = png_to_grid2d(grid, png_map_path)
+
     sdf = SDF(grid)
-    print(np.flipud(sdf.distances))
-    print(np.count_nonzero(sdf.distances == -1))
+    #print(np.flipud(sdf.distances))
+    #print(np.count_nonzero(sdf.distances == -1))
 
     # drawing grids
     (fig1, ax1) = draw_grid(np.flipud(sdf.distances), sdf.rows, sdf.cols, 'SDF Grid', 'Greys_r')
+    plt.show()
+    #ax1.add_patch(plt.Rectangle((5,5), 1, 1, color='yellow')) #test
     (fig2, ax2) = draw_obstacles_from_SDF(sdf)
+    plt.close()
 
-    fig1.show()
-    fig2.show()
+    test_path_finding(sdf, (31, 23), (37, 8), 25)
+    test_path_finding(sdf, (31, 23), (37, 8), 5)
+    test_path_finding(sdf, (0, 4), (31, 23), 25)
+    test_path_finding(sdf, (0, 2), (37, 8), 25)
+
+def test_path_finding(sdf, start, end, sensor_range):
+    """
+    Tests and plots path finding algorithm, with each step plotted.
     
-    # a test case that works for both grids
-    startCell = Cell(0, 2)
-    targetCell = Cell(37, 8)
+    Args:
+    - start: start cell in tuple from (row, col)
+    - end: end cell in tuple form (row, col)
+    - sensor_range: max range of sensor
+    """
+    borderCellGroups = dict()
+    traversedCells = sdf.traverse_dummy_improved(start, end, sensor_range, borderCellGroups)
+    traversedPoints = convert_tuple_cells_to_points(traversedCells) 
+    trace_traversal_with_sensor(sdf, traversedPoints, borderCellGroups, len(traversedPoints)-1)
 
-    traversedCells = sdf.traverse_dummy(startCell, targetCell)
-    # traversedPoints = convert_cells_to_points(traversedCells)
-    # print('rows: ', sdf.rows, '; cols: ', sdf.cols) # prints for debugging purposes
-    # print('points:, ', traversedPoints)
-    draw_lines_on_grid_from_cells(ax2, traversedCells)
-
-
-def test_data_structure(map_name, grid_visible=True):
-    np.set_printoptions(threshold = np.inf)
-    np.set_printoptions(linewidth = np.inf)
-
-
-    # Path to the png file corresponding to the environment
-    # Black regions are occupied, white regions are free
-    # In this test, a grid map should be created for this map
-    #png_map_path = f'test_data/{map_name}.png'
+def test_robot(map_name, start, end):
+    '''
+    pathfinding with incremental knowledge
+    '''
 
     # path for belle
-    png_map_path = rf'C:\Users\litin\OneDrive\Desktop\MRAL_Final_Project\mapper_py\test_data\{map_name}.png'
+    #png_map_path = rf'C:\Users\litin\OneDrive\Desktop\MRAL_Final_Project\mapper_py\test_data\{map_name}.png'
     
-    # Grid map at resolution 0.1 of size 60 cells x 80 cells
-    # Minimum probability (i.e. highest confidence about free space) is 0.001
-    # Maximum probability (i.e. highest confidence about occupied space) is 0.999
-    grid = Grid2D(0.1, 60, 80, 0.001, 0.999)
-    grid = Grid2D(0.5, 30, 40, 0.001, 0.999)
-
-
-    # Update the grid using the png image
-    grid = png_to_grid2d(grid, png_map_path)
+    # path for nick
+    png_map_path = "test_data/" + map_name + ".png"
     
+    #initializing robot object
+    local_grid = Grid2D(0.5, 30, 40, 0.001, 0.999)
+    global_grid = Grid2D(0.5, 30, 40, 0.001, 0.999)
+    global_grid = png_to_grid2d(global_grid, png_map_path)
+    robot = Robot(global_grid, local_grid, start)
 
-    # Get a numpy array corresponding to the grid
-    #grid_numpy = grid.to_numpy()
+    global_sdf = SDF(global_grid)
+    #print(np.flipud(global_sdf.distances))
+    #print(np.count_nonzero(global_sdf.distances == -1))
+    
+    # drawing grids
+    (fig1, ax1) = draw_grid(np.flipud(global_sdf.distances), global_sdf.rows, global_sdf.cols, 'SDF Grid', 'Greys_r')
+    plt.show()
+    #ax1.add_patch(plt.Rectangle((5,5), 1, 1, color='yellow')) #test
+    (fig2, ax2) = draw_obstacles_from_SDF(global_sdf)
+    plt.close()
 
-    # Load the correct answer
-    #b = np.load(f'test_data/{map_name}.npz')
-    #grid_numpy_correct = b['grid_numpy']
+    test_incremental_path_finding(robot, end)
 
-    # Check if all the values are close
-    # If you get "test_data_structure failed", check your grid2d implementation
-    #if (np.abs(grid_numpy_correct - grid_numpy) < 1e-6).all():
-        #cprint.info('test_data_structure successful.')
-    #else:
-        #cprint.err('test_data_structure failed.', interrupt=False)
+def test_incremental_path_finding(r, end):
+    '''
+    inputs:
+    start: tuple
+    end: tuple
+    '''
 
-    # Visualize for extra clarity
-    #grid_fig, grid_ax = plt.subplots()
-    #pos = visualize(grid, ax=grid_ax)
+    borderCellGroups = dict()
+    traversedCells, sdfs = r.traverse3(end, borderCellGroups)
+    traversedPoints = convert_tuple_cells_to_points(traversedCells) 
+    trace_incremental_traversal_with_sensor(sdfs, traversedPoints, borderCellGroups, len(traversedPoints)-1)
 
-    # The colorbar indicates occupancy probabilities in range [0.0, 1.0]
-    #grid_fig.colorbar(pos, ax=grid_ax)
 
-    # Create grid lines -- you can disable them if you like for clarity
-    #if grid_visible:
-        #grid_ax.xaxis.set_major_locator(MultipleLocator(1.0))
-        #grid_ax.yaxis.set_major_locator(MultipleLocator(1.0))
-        #grid_ax.xaxis.set_minor_locator(MultipleLocator(grid.resolution))
-        #grid_ax.yaxis.set_minor_locator(MultipleLocator(grid.resolution))
-        #rid_ax.grid(which='major', axis='both', linestyle='-')
-        #grid_ax.grid(which='minor', axis='both', linestyle='-')
-
-    # Labels for clarity on the cell space and point space
-    #grid_ax.set_xlabel('Cell Space: Cols, Point Space: X (meters)')
-    #grid_ax.set_ylabel('Cell Space: Rows, Point Space: Y (meters)')
-
-    # Only display the relevant part of the grid
-    #grid_ax.set_xlim([0.0, grid.resolution * grid.width])
-    #grid_ax.set_ylim([0.0, grid.resolution * grid.height])
-
-    test_sdf(grid)
-
-    rows = grid.height
-    cols = grid.width
-    (fig3, ax3) = draw_grid(np.flipud(grid.to_numpy()), rows, cols, 'Obstacles from Logodds Grid')
-
-    #draw_lines_on_grid(ax3, [(1,1), (4, 4), (5, 7), (2, 5)]) # test of draw_lines
-    plt.show() # shows figs in groups
-
-    # Show the grid
-    #grid_ax.set_aspect('equal')
-    #plt.show()
-
+'''
 def test_traversal(grid_ax, start=Point(1.2, 1.2), end=Point(2.2, 1.5), test_file='traced_cells_1',
                    c='navy', grid_visible=True):
     # Initialize an empty grid
@@ -170,35 +178,27 @@ def test_traversal(grid_ax, start=Point(1.2, 1.2), end=Point(2.2, 1.5), test_fil
     grid_ax.set_aspect('equal')
     grid_ax.set_xlim([0.0, grid.resolution * grid.width])
     grid_ax.set_ylim([0.0, grid.resolution * grid.height])
-
+'''
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--map', type=str, default='simple_obstacle')
 
     args = parser.parse_args()
-    print(args.map)
-    test_data_structure(args.map)
-    test_data_structure("obs1")
+    #print(args.map)
+    #test(args.map)
+    test("obs1")
+
+    '''png_map_path = "test_data/" + "obs1" + ".png"
+    grid = Grid2D(0.5, 30, 40, 0.001, 0.999)
+    grid = png_to_grid2d(grid, png_map_path)
+
+    sdf = SDF(grid)
+    sc = sdf.copy()
+
+    sdf.distances[0][0] = 99
+
+    print(sdf.distances)
+    print(sc.distances)'''
 
     trav_fig, trav_ax = plt.subplots()
-
-    # Test slopped rays
-    #test_traversal(trav_ax, test_file='traced_cells_01')
-    #test_traversal(trav_ax, start=Point(3.52, 2.57), end=Point(1.56, 3.92), test_file='traced_cells_02')
-
-    # Test edge rays (horizontal and vertical)
-    #test_traversal(trav_ax, start=Point(0.5, 2.9), end=Point(2.0, 2.9), c='maroon', test_file='traced_cells_03')
-    #test_traversal(trav_ax, start=Point(3.8, 0.5), end=Point(3.8, 2.0), c='maroon', test_file='traced_cells_04')
-
-    # Test finer rays (horizontal and vertical)
-    #test_traversal(trav_ax, start=Point(0.52, 0.85), end=Point(3.15, 0.85), c='darkgreen', test_file='traced_cells_05')
-    #test_traversal(trav_ax, start=Point(0.15, 0.52), end=Point(0.15, 3.15), c='darkgreen', test_file='traced_cells_06')
-
-    # Test rays going outside of the map bounds
-    #test_traversal(trav_ax, start=Point(3.32, 0.52), end=Point(7.15, -3.15), c='purple', test_file='traced_cells_07')
-    #test_traversal(trav_ax, start=Point(2.12, 0.12), end=Point(-7.15, 1.15), c='purple', test_file='traced_cells_08')
-    #test_traversal(trav_ax, start=Point(3.72, 3.53), end=Point(7.15, 9.18), c='purple', test_file='traced_cells_09')
-    #test_traversal(trav_ax, start=Point(1.72, 3.53), end=Point(-7.15, 6.18), c='purple', test_file='traced_cells_10')
-
-    #plt.show()
