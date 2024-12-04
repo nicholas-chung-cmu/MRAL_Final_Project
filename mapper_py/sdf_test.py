@@ -23,10 +23,14 @@ def test_sdf(grid):
     (fig2, ax2) = draw_obstacles_from_SDF(sdf)
     plt.close()
 
-    test_path_finding(sdf, (31, 23), (37, 8), 25)
-    test_path_finding(sdf, (31, 23), (37, 8), 5)
-    test_path_finding(sdf, (0, 4), (31, 23), 25)
-    test_path_finding(sdf, (0, 2), (37, 8), 25)
+    #image_folder_path = rf"C:\Users\litin\OneDrive\Desktop\MRAL_Final_Project\generated_plots\{grid_name}"
+    # test_path_finding(sdf, (31, 23), (37, 8), 25, image_folder_path + '_test1')
+    #test_path_finding_savefigs(sdf, (31, 23), (37, 8), 1, image_folder_path + '_test2.5')
+    #test_path_finding_savefigs(sdf, (0, 4), (31, 23), 10, image_folder_path + '_test3.5')
+    
+    # test_path_finding(sdf, (0, 2), (37, 8), 25, image_folder_path + '_test4')
+
+    #test_path_finding_savefigs(sdf, (0, 4), (31, 23), 50, image_folder_path + '_test5')
 
 def test_path_finding(sdf, start, end, sensor_range):
     """
@@ -41,6 +45,21 @@ def test_path_finding(sdf, start, end, sensor_range):
     traversedCells = sdf.traverse_dummy_improved(start, end, sensor_range, borderCellGroups)
     traversedPoints = convert_tuple_cells_to_points(traversedCells) 
     trace_traversal_with_sensor(sdf, traversedPoints, borderCellGroups, len(traversedPoints)-1)
+
+
+def test_path_finding_savefigs(sdf, start, end, sensor_range, file_path):
+    """
+    Tests and plots path finding algorithm, with each step plotted.
+    
+    Args:
+    - start: start cell in tuple from (row, col)
+    - end: end cell in tuple form (row, col)
+    - sensor_range: max range of sensor
+    """
+    borderCellGroups = dict()
+    traversedCells = sdf.traverse_dummy_improved(start, end, sensor_range, borderCellGroups)
+    traversedPoints = convert_tuple_cells_to_points(traversedCells) 
+    trace_traversal_with_sensor_savefigs(sdf, traversedPoints, borderCellGroups, len(traversedPoints)-1, file_path)
 
 
 def test_data_structure(map_name, grid_visible=True):
