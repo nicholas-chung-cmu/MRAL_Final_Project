@@ -38,14 +38,14 @@ class Robot:
             self.mapper.add_obs(self.local_grid.Cell_to_Point(self.pos))
             self.sdf.load_obs()
             self.sdf.update_sdf()
-            print(self.sdf.distances)
+            #print(self.sdf.distances)
 
             #move
             path.append(self.pos)
-            print("Robot: ", str(self.pos.row), str(self.pos.col))
+            #print("Robot: ", str(self.pos.row), str(self.pos.col))
             self.pos = self.sdf.chooseNextCell(self.pos, goal)
             input("continue") #so you can watch the robot move
-            print()
+            #print()
         return path
 
     def traverse_improved(self, end, borderCellGroups):
@@ -88,7 +88,8 @@ class Robot:
             #print(self.sdf.distances)
 
             # record current map
-            sdfs.append(self.sdf.copy())
+            currSDF = self.sdf.copy()
+            sdfs.append(currSDF)
 
             #move
             path.append(self.pos)

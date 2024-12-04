@@ -52,10 +52,9 @@ class SDF:
                     self.distances[row][col] = 0
 
     def populate_sdf(self):
-        dists = self.distances
         for row in range(self.rows):
             for col in range(self.cols):
-                if dists[row][col] != 0: #open space
+                if self.distances[row][col] != 0: #open space
                     self.populate_sdf_local(row, col)
     
     def populate_sdf_local(self, row, col):

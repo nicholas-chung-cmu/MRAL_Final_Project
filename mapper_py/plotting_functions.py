@@ -253,8 +253,8 @@ def trace_incremental_traversal_with_sensor(sdfs, points, cells_with_sensor, ste
         # Below while loop should draw the path up until prev_point, 
         # and then highlight all border cells considered until the next point (curr_point) is selected.
         while counter2 < num_groups:
-            print(np.flipud(sdfs[counter2].distances))
-            fig, ax = draw_obstacles_from_SDF(sdfs[counter2])
+            #print(np.flipud(sdfs[counter2].distances))
+            fig, ax = draw_obstacles_from_SDF(sdfs[counter - 1])
 
             # plot start and end points
             ax.plot(first_point_x, first_point_y, marker='o', color='red')
