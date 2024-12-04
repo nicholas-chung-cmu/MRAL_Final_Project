@@ -722,7 +722,10 @@ class SDF:
     def chooseNextCell3(self, curr, end, range, borderCellGroups):
         """
         Same as above, but with more heuristics
-        idea: add an obstacle to the visited cell to encourage moving around more
+        ideas: 
+         - add an obstacle to the visited cell to encourage moving around more
+         - upon random chance, ignore heuristics and explore a random direction
+         - 
         """
         (crow, ccol) = (curr[0], curr[1])
         (erow, ecol) = (end[0], end[1])
@@ -749,20 +752,22 @@ class SDF:
                 borderCellGroups[curr] = [deepcopy(borderCells)]
             #print('num border cells: ', len(borderCells))
             for next_cell in borderCells: 
-                # don't go to a cell that you've already been to?
+                # don't go to a cell that you've already been to
                 if next_cell not in borderCellGroups:
                     (nrow, ncol) = (next_cell[0], next_cell[1])
 
                     # if end is farther from range, dont worry about second not
-                    if not self.obstacleInPath(curr, next_cell):
+                    if not self.obstacleInPath(curr, next_cell): # next_cell is not obstructed
                     # print('no obstacle found yay')
                         cell_dist_from_end = ((nrow - erow)**2 + (ncol - ecol)**2)**(1/2)
                         cell_dist_from_obs = self.distances[nrow, ncol]
 
+                        # check if goal is within reach or robot cannot reach goal from next_cell
                         if (cell_dist_from_end <= range and not self.obstacleInPath(next_cell, end)) or cell_dist_from_end > range:
                             #print('cell dist from end: ', cell_dist_from_end)
-                            if (((cell_dist_from_end < best_dist_from_end) and (cell_dist_from_obs > 0)) 
-                            or ((cell_dist_from_end == best_dist_from_end) and (cell_dist_from_obs > best_dist_from_obs))):
+                            if (np.random.random() > 0.66
+                                or ((cell_dist_from_end == best_dist_from_end) and (cell_dist_from_obs > best_dist_from_obs))
+                                or ((cell_dist_from_end < best_dist_from_end) and (cell_dist_from_obs > 0))):
                                 #print('CHANGING BEST CELL')
                                 best_cell = next_cell
                                 best_dist_from_end = cell_dist_from_end

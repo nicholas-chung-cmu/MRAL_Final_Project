@@ -198,14 +198,14 @@ def trace_traversal_with_sensor(sdf, points, cells_with_sensor, steps):
             for row, col in cell_coords:
                 # b/c x = col & y = row
                 ax.add_patch(plt.Rectangle((col, row), 1, 1, color='yellow'))
-            plt.show()
+            #plt.show()
             counter2 += 1
 
         # draw chosen point (curr)
         (prev_point_row, prev_point_col) = prev_point
         (curr_point_row, curr_point_col) = curr_point
         ax.plot([prev_point_row, curr_point_row], [prev_point_col, curr_point_col], color='red')      
-        plt.show()
+        #plt.show()
         counter += step_size
     
     # plot final trajectory
@@ -281,8 +281,9 @@ def trace_incremental_traversal_with_sensor(sdfs, points, cells_with_sensor, ste
         (curr_point_row, curr_point_col) = curr_point
         ax.plot([prev_point_row, curr_point_row], [prev_point_col, curr_point_col], color='red')      
         plt.show(block=False)
-        plt.pause(1.5)
-        plt.close('all')
+        print()
+        plt.pause(0.35)
+        plt.close("all")
         counter += step_size
     
     # plot final trajectory
