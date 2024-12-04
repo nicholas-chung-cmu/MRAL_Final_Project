@@ -20,33 +20,11 @@ def test(map_name, grid_visible=True):
     '''
     np.set_printoptions(threshold = np.inf)
     np.set_printoptions(linewidth = np.inf)
-
-
-    # Path to the png file corresponding to the environment
-    # Black regions are occupied, white regions are free
-    # In this test, a grid map should be created for this map
-    #png_map_path = f'test_data/{map_name}.png'
-
-    # path for belle
-    #png_map_path = rf'C:\Users\litin\OneDrive\Desktop\MRAL_Final_Project\mapper_py\test_data\{map_name}.png'
-
-    # path for nick
-    #png_map_path = "test_data/" + map_name + ".png"
-    
-    # Grid map at resolution 0.1 of size 60 cells x 80 cells
-    # Minimum probability (i.e. highest confidence about free space) is 0.001
-    # Maximum probability (i.e. highest confidence about occupied space) is 0.999
-    #grid = Grid2D(0.1, 60, 80, 0.001, 0.999)
-    #grid = Grid2D(0.5, 30, 40, 0.001, 0.999)
-
-
-    # Update the grid using the png image
-    #grid = png_to_grid2d(grid, png_map_path)
     
     #test_sdf(map_name)
-    test_robot(map_name, (31, 23), (37, 8))
-    test_robot(map_name, (31, 23), (37, 8))
-    test_robot(map_name, (0, 4), (31, 23))
+    #test_robot(map_name, (31, 23), (37, 8))
+    #test_robot(map_name, (31, 23), (37, 8))
+    test_robot(map_name, (0, 4), (6, 23))
     test_robot(map_name, (0, 2), (37, 8))
 
     #rows = grid.height
@@ -133,7 +111,7 @@ def test_incremental_path_finding(r, end):
     '''
 
     borderCellGroups = dict()
-    traversedCells, sdfs = r.traverse_improved(end, borderCellGroups)
+    traversedCells, sdfs = r.traverse3(end, borderCellGroups)
     traversedPoints = convert_tuple_cells_to_points(traversedCells) 
     trace_incremental_traversal_with_sensor(sdfs, traversedPoints, borderCellGroups, len(traversedPoints)-1)
 

@@ -719,6 +719,68 @@ class SDF:
             raise Exception('No next step found.')
         return best_cell
         
+    def chooseNextCell3(self, curr, end, range, borderCellGroups):
+        """
+        Same as above, but with more heuristics
+        idea: add an obstacle to the visited cell to encourage moving around more
+        """
+        (crow, ccol) = (curr[0], curr[1])
+        (erow, ecol) = (end[0], end[1])
+        
+        best_cell = curr
+        (brow, bcol) = (best_cell[0], best_cell[1])
+        best_dist_from_end = 1e6
+        best_dist_from_obs = 0
+        
+        curr_dist_from_end = int(((crow - erow)**2 + (ccol - ecol)**2)**(1/2))
+        range = min(range, curr_dist_from_end) # if end is already within range, don't use the max range of the sensor.
+
+        # Below while loop should continue iterating until a "best_cell" is found.
+        # If no suitable cell is found at the current range, the range will decrease, 
+        # and the while loop will try again. 
+        while best_cell == curr and range > 0: 
+            # print('range: ', range)
+            # print('curr: ', curr)
+            borderCells = self.getCellsAtRangeBorder_sensor(curr, range)
+            #print('border cells: ', borderCells)
+            if curr in borderCellGroups:
+                borderCellGroups[curr].append(deepcopy(borderCells))
+            else:
+                borderCellGroups[curr] = [deepcopy(borderCells)]
+            #print('num border cells: ', len(borderCells))
+            for next_cell in borderCells: 
+                # don't go to a cell that you've already been to?
+                if next_cell not in borderCellGroups:
+                    (nrow, ncol) = (next_cell[0], next_cell[1])
+
+                    # if end is farther from range, dont worry about second not
+                    if not self.obstacleInPath(curr, next_cell):
+                    # print('no obstacle found yay')
+                        cell_dist_from_end = ((nrow - erow)**2 + (ncol - ecol)**2)**(1/2)
+                        cell_dist_from_obs = self.distances[nrow, ncol]
+
+                        if (cell_dist_from_end <= range and not self.obstacleInPath(next_cell, end)) or cell_dist_from_end > range:
+                            #print('cell dist from end: ', cell_dist_from_end)
+                            if (((cell_dist_from_end < best_dist_from_end) and (cell_dist_from_obs > 0)) 
+                            or ((cell_dist_from_end == best_dist_from_end) and (cell_dist_from_obs > best_dist_from_obs))):
+                                #print('CHANGING BEST CELL')
+                                best_cell = next_cell
+                                best_dist_from_end = cell_dist_from_end
+                                best_dist_from_obs = cell_dist_from_obs
+            # if we get through all the cells and they all have obstacle in path, best_cell should still be set to curr_cell
+            # at this point we know that there are no suitable cells at this range, so we try a smaller range. 
+            range -= 1
+    
+        if best_cell == curr:
+            raise Exception('No next step found.')
+        
+        # make current cell an obstacle, update distances
+        curr_idx = self.grid.to_index(Cell(curr[0], curr[1]))
+        self.grid.data[curr_idx] = self.grid.occ_thres
+        self.load_obs()
+        self.populate_sdf()
+
+        return best_cell
 
     def traverse_dummy_improved(self, start, end, range, borderCellGroups):
         """

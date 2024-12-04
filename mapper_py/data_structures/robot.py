@@ -98,6 +98,59 @@ class Robot:
             #input("continue") #so you can watch the robot move
             #print()
         return path, sdfs
+    
+    def traverse3(self, end, borderCellGroups):
+        '''
+        uses new chooseNextCell3 function
+
+        inputs:
+        end: tuple of robot's goal
+
+        outputs:
+        path: list of traversed Cells
+        sdfs: list of SDF objects taken at each step in traversal
+        '''
+
+        np.set_printoptions(threshold = np.inf)
+        np.set_printoptions(linewidth = np.inf)
+        
+
+        start = self.pos
+        if not self.sdf.inGrid(start):
+            raise Exception('Start not in grid.') 
+        if not self.sdf.inGrid(end):
+            raise Exception('End not in grid.') 
+        
+        (srow, scol) = (start[0], start[1])
+        (erow, ecol) = (end[0], end[1])
+        start_val = self.sdf.distances[srow, scol]
+        end_val = self.sdf.distances[erow, ecol]
+
+        if start_val == 0:
+            raise Exception('Start in obstacle. Cannot compute traversal.')
+        if end_val == 0:
+            raise Exception('End in obstacle. Cannot compute traversal.')
+
+        # goal is a tuple of form (row, col)
+        path = list()
+        sdfs = list()
+        while self.pos != end:
+            
+            # observe and update map
+            self.observe_surroundings()
+            #print(self.sdf.distances)
+
+            # record current map
+            currSDF = self.sdf.copy()
+            sdfs.append(currSDF)
+
+            #move
+            path.append(self.pos)
+            #print("Robot: ", str(self.pos[0]), str(self.pos[1]))
+            self.pos = self.sdf.chooseNextCell3(self.pos, end, self.mapper.sensor.max_range, borderCellGroups)
+            #input("continue") #so you can watch the robot move
+            #print()
+        return path, sdfs
 
     def observe_surroundings(self):
         self.mapper.add_obs(self.local_grid.Tuple_to_Point(self.pos))

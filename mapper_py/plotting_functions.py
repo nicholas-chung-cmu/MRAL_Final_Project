@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import time
 
 # for testing purposes import sdf functions, etc.
 
@@ -75,7 +76,7 @@ def draw_lines_on_grid_incrementally(sdf, cells, steps=5): # very inefficiently
             ax.plot([x0, x1], [y0, y1], color='red')
             # Show the new figure
         
-        plt.show()
+        #plt.show()
         counter += step_size
         
 
@@ -137,7 +138,7 @@ def highlight_referenced_cells_incrementally(sdf, cells_groups, steps):
             # b/c x = col & y = row
             ax.add_patch(plt.Rectangle((col, row), 1, 1, color='yellow'))
         
-        plt.show()
+        #plt.show()
         counter += step_size
 
 ###################################################################################
@@ -237,7 +238,6 @@ def trace_incremental_traversal_with_sensor(sdfs, points, cells_with_sensor, ste
 
     (first_point_x, first_point_y) = points[0]
     (end_point_x, end_point_y) = points[num_points-1]
-
     while counter < num_points:
 
         prev_point = points[counter-1]
@@ -252,6 +252,7 @@ def trace_incremental_traversal_with_sensor(sdfs, points, cells_with_sensor, ste
 
         # Below while loop should draw the path up until prev_point, 
         # and then highlight all border cells considered until the next point (curr_point) is selected.
+        f = plt.figure()
         while counter2 < num_groups:
             #print(np.flipud(sdfs[counter2].distances))
             fig, ax = draw_obstacles_from_SDF(sdfs[counter - 1])
@@ -273,14 +274,15 @@ def trace_incremental_traversal_with_sensor(sdfs, points, cells_with_sensor, ste
             for row, col in cell_coords:
                 # b/c x = col & y = row
                 ax.add_patch(plt.Rectangle((col, row), 1, 1, color='yellow'))
-            plt.show()
             counter2 += 1
 
         # draw chosen point (curr)
         (prev_point_row, prev_point_col) = prev_point
         (curr_point_row, curr_point_col) = curr_point
         ax.plot([prev_point_row, curr_point_row], [prev_point_col, curr_point_col], color='red')      
-        plt.show()
+        plt.show(block=False)
+        plt.pause(1.5)
+        plt.close('all')
         counter += step_size
     
     # plot final trajectory
