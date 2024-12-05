@@ -150,6 +150,8 @@ class Grid2D:
         # A logodds value of zero corresponds to an occupancy probability of 0.5.
         self.data = [0.0] * self.N
 
+
+
     def to_numpy(self):
         """Export the grid in the form of a 2D numpy matrix.
 
@@ -162,6 +164,9 @@ class Grid2D:
                 g[row][col] = self.probability(v)
 
         return g
+
+    def Tuple_to_Point(self, c):
+        return (Point(c[1] + 0.5, c[0] + 0.5) * self.resolution)
 
     def to_index(self, cell):
         """Return the index into the data array (self.data) for the input cell.
