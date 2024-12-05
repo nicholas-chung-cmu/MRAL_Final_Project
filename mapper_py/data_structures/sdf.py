@@ -780,10 +780,10 @@ class SDF:
             raise Exception('No next step found.')
         
         # make current cell an obstacle, update distances
-        curr_idx = self.grid.to_index(Cell(curr[0], curr[1]))
-        self.grid.data[curr_idx] = self.grid.occ_thres
-        self.load_obs()
-        self.populate_sdf()
+        #curr_idx = self.grid.to_index(Cell(curr[0], curr[1]))
+        #self.grid.data[curr_idx] = self.grid.occ_thres
+        #self.load_obs()
+        #self.populate_sdf()
 
         return best_cell
 

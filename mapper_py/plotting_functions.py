@@ -89,7 +89,7 @@ def convert_cells_to_points(cells):
     """
     points = list()
 
-    print(f'first cell: ({cells[0].row}, {cells[0].col})')
+    #print(f'first cell: ({cells[0].row}, {cells[0].col})')
     for i in range(len(cells)):
         cell_to_tuple = (cells[i].col + 0.5, cells[i].row + 0.5)
         points.append(cell_to_tuple)
@@ -171,7 +171,7 @@ def trace_traversal_with_sensor(sdf, points, cells_with_sensor, steps):
         # now draw sensor readings (if end hasn't been reached yet)
         #if counter < num_points:
         prev_cell_tuple = (((int) (prev_point[1] - 0.5)), ((int) (prev_point[0] - 0.5)))
-        print(cells_with_sensor)
+        #print(cells_with_sensor)
         prev_cell_sensor_readings = cells_with_sensor[prev_cell_tuple]
         num_groups = len(prev_cell_sensor_readings)
         counter2 = 0
@@ -198,7 +198,7 @@ def trace_traversal_with_sensor(sdf, points, cells_with_sensor, steps):
             for row, col in cell_coords:
                 # b/c x = col & y = row
                 ax.add_patch(plt.Rectangle((col, row), 1, 1, color='yellow'))
-            #plt.show()
+            plt.show()
             counter2 += 1
 
         # draw chosen point (curr)
@@ -281,8 +281,7 @@ def trace_incremental_traversal_with_sensor(sdfs, points, cells_with_sensor, ste
         (curr_point_row, curr_point_col) = curr_point
         ax.plot([prev_point_row, curr_point_row], [prev_point_col, curr_point_col], color='red')      
         plt.show(block=False)
-        print()
-        plt.pause(0.35)
+        plt.pause(0.5)
         plt.close("all")
         counter += step_size
     

@@ -44,8 +44,8 @@ def test_sdf(map_name):
     grid = png_to_grid2d(grid, png_map_path)
 
     sdf = SDF(grid)
-    #print(np.flipud(sdf.distances))
-    #print(np.count_nonzero(sdf.distances == -1))
+    print(np.flipud(sdf.distances))
+    print(np.count_nonzero(sdf.distances == -1))
 
     # drawing grids
     (fig1, ax1) = draw_grid(np.flipud(sdf.distances), sdf.rows, sdf.cols, 'SDF Grid', 'Greys_r')
@@ -91,8 +91,8 @@ def test_robot(map_name, start, end):
     robot = Robot(global_grid, local_grid, start)
 
     global_sdf = SDF(global_grid)
-    #print(np.flipud(global_sdf.distances))
-    #print(np.count_nonzero(global_sdf.distances == -1))
+    print(np.flipud(global_sdf.distances))
+    print(np.count_nonzero(global_sdf.distances == -1))
     
     # drawing grids
     (fig1, ax1) = draw_grid(np.flipud(global_sdf.distances), global_sdf.rows, global_sdf.cols, 'SDF Grid', 'Greys_r')
@@ -185,7 +185,6 @@ if __name__ == '__main__':
     parser.add_argument('--map', type=str, default='simple_obstacle')
 
     args = parser.parse_args()
-    #print(args.map)
     #test(args.map)
     test("obs1")
 
