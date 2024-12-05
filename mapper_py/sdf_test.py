@@ -116,6 +116,69 @@ def test_incremental_path_finding(r, end):
     trace_incremental_traversal_with_sensor(sdfs, traversedPoints, borderCellGroups, len(traversedPoints)-1)
 
 
+# version with figure saving
+def test_savefigs(map_name, grid_visible=True):
+    '''
+    overall test file
+    input:
+    map_name: string of map png filename
+    '''
+    np.set_printoptions(threshold = np.inf)
+    np.set_printoptions(linewidth = np.inf)
+
+    image_folder_path = rf"C:\Users\litin\OneDrive\Desktop\MRAL_Final_Project-1\generated_plots\exploration_too\{map_name}"
+    
+    #test_sdf(map_name)
+    #test_robot(map_name, (31, 23), (37, 8))
+    #test_robot(map_name, (31, 23), (37, 8))
+    test_robot(map_name, (0, 4), (6, 23), image_folder_path + '_test1')
+    test_robot(map_name, (0, 2), (37, 8), image_folder_path + '_test2')
+
+    #rows = grid.height
+    #cols = grid.width
+
+def test_robot(map_name, start, end, fig_path):
+    '''
+    pathfinding with incremental knowledge
+    '''
+
+    # path for belle
+    png_map_path = rf'C:\Users\litin\OneDrive\Desktop\MRAL_Final_Project\mapper_py\test_data\{map_name}.png'
+    
+    # path for nick
+    #png_map_path = "test_data/" + map_name + ".png"
+    
+    #initializing robot object
+    local_grid = Grid2D(0.5, 30, 40, 0.001, 0.999)
+    global_grid = Grid2D(0.5, 30, 40, 0.001, 0.999)
+    global_grid = png_to_grid2d(global_grid, png_map_path)
+    robot = Robot(global_grid, local_grid, start)
+
+    global_sdf = SDF(global_grid)
+    #print(np.flipud(global_sdf.distances))
+    #print(np.count_nonzero(global_sdf.distances == -1))
+    
+    # drawing grids
+    (fig1, ax1) = draw_grid(np.flipud(global_sdf.distances), global_sdf.rows, global_sdf.cols, 'SDF Grid', 'Greys_r')
+    plt.show()
+    #ax1.add_patch(plt.Rectangle((5,5), 1, 1, color='yellow')) #test
+    (fig2, ax2) = draw_obstacles_from_SDF(global_sdf)
+    plt.close()
+
+    test_incremental_path_finding_savefigs(robot, end, fig_path)
+
+def test_incremental_path_finding_savefigs(r, end, fig_path):
+    '''
+    inputs:
+    start: tuple
+    end: tuple
+    '''
+
+    borderCellGroups = dict()
+    traversedCells, sdfs = r.traverse3(end, borderCellGroups)
+    traversedPoints = convert_tuple_cells_to_points(traversedCells) 
+    trace_incremental_traversal_with_sensor_savefig(sdfs, traversedPoints, borderCellGroups, len(traversedPoints)-1, fig_path)
+
 '''
 def test_traversal(grid_ax, start=Point(1.2, 1.2), end=Point(2.2, 1.5), test_file='traced_cells_1',
                    c='navy', grid_visible=True):
@@ -187,7 +250,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     #print(args.map)
     #test(args.map)
-    test("obs1")
+    #test("obs1")
+    test_savefigs("obs1")
 
     '''png_map_path = "test_data/" + "obs1" + ".png"
     grid = Grid2D(0.5, 30, 40, 0.001, 0.999)
