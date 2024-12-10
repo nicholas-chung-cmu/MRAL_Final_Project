@@ -55,15 +55,13 @@ def draw_lines_on_grid_from_points(ax, points):
         (x1, y1) = points[point+1]
         ax.plot([x0, x1], [y0, y1], color='red')
 
-# if incremental showing, need to create a new figure each time ;-;
 
-def draw_lines_on_grid_incrementally(sdf, cells, steps=5): # very inefficiently
+def draw_lines_on_grid_incrementally(sdf, cells, steps=5): 
     points = convert_cells_to_points(cells)
     num_points = len(points)
     counter = 1
 
     step_size = (num_points-1)//steps
-    print('step_size: ', step_size)
 
     while counter < num_points:
         fig, ax = draw_obstacles_from_SDF(sdf)
@@ -71,10 +69,7 @@ def draw_lines_on_grid_incrementally(sdf, cells, steps=5): # very inefficiently
             (x0, y0) = points[point]
             (x1, y1) = points[point+1]
 
-            # Set the same title and labels
-
             ax.plot([x0, x1], [y0, y1], color='red')
-            # Show the new figure
         
         plt.show()
         counter += step_size
@@ -88,8 +83,6 @@ def convert_cells_to_points(cells):
     - cells: list of Cell objects 
     """
     points = list()
-
-    print(f'first cell: ({cells[0].row}, {cells[0].col})')
     for i in range(len(cells)):
         cell_to_tuple = (cells[i].col + 0.5, cells[i].row + 0.5)
         points.append(cell_to_tuple)
@@ -101,11 +94,10 @@ def convert_tuple_cells_to_points(cells):
     Converts a set of cells to a list of tuples such that each point is centered in each cell.
 
     Args:
-    - cells: list of 
+    - cells: list of tuple cells, [(row0, col0), (row1, col1), etc.]
     """
     points = list()
 
-    #print(f'first cell: ({cells[0].row}, {cells[0].col})')
     for i in range(len(cells)):
         cell = cells[i]
         (crow, ccol) = (cell[0], cell[1])
@@ -120,7 +112,13 @@ def draw_lines_on_grid_from_cells(ax, cells):
 
 def highlight_referenced_cells_incrementally(sdf, cells_groups, steps):
     """
-    highlights cells at border of range used for traversal algorithm.
+    Highlights cells at border of range used for traversal algorithm.
+
+    Args:
+    - sdf: sdf object
+    - cells_groups: mutable dictionary matching tuple cell keys to a list of groups of border cells referenced; 
+                    e.g. [(row, col): [[borderCellsAtMaxRange], [borderCellsAtSmallerRange]...]
+    - steps: number of steps to divide path tracing for viewing; to view all steps: steps = len(points) - 1
     """
     num_groups = len(cells_groups)
     counter = 0
@@ -130,7 +128,6 @@ def highlight_referenced_cells_incrementally(sdf, cells_groups, steps):
     while counter < num_groups:
         fig, ax = draw_obstacles_from_SDF(sdf)
         cells = cells_groups[counter]
-        #print('cells: ', cells)
         cell_coords = list()
         for cell in cells:
             cell_coords.append((cell.row, cell.col))
@@ -141,24 +138,22 @@ def highlight_referenced_cells_incrementally(sdf, cells_groups, steps):
         plt.show()
         counter += step_size
 
-###################################################################################
-# MOST UP-TO-DATE VERSION OF INCREMENTAL PLOTTING OF PATH-FINDING ALGORITHM BELOW #
-###################################################################################
 
 def trace_traversal_with_sensor(sdf, points, cells_with_sensor, steps):
     '''
-    inputs: 
-    sdf: SDF object of known map
-    points: centers of traversed cells
-    cells_with_sensor: dict with entries {sensorCell: [sensedCells]}
-    steps: number of steps taken in traversal
+    Draws steps of path traversal incrementally. Path traversal algorithm with initially known map.
+
+    Args:
+    - sdf: SDF object of known map
+    - points: centers of traversed cells
+    - cells_with_sensor: mutable dictionary matching tuple cell keys to a list of groups of border cells referenced; 
+                        e.g. [(row, col): [[borderCellsAtMaxRange], [borderCellsAtSmallerRange]...]
+    - steps: number of steps to divide path tracing for viewing; to view all steps: steps = len(points) - 1
     '''
-    #print('points: ', points)
     num_points = len(points)
     counter = 1
 
     step_size = (num_points-1)//steps
-    #print('step_size AHHH: ', step_size)
 
     (first_point_x, first_point_y) = points[0]
     (end_point_x, end_point_y) = points[num_points-1]
@@ -169,7 +164,6 @@ def trace_traversal_with_sensor(sdf, points, cells_with_sensor, steps):
         curr_point = points[counter]
         
         # now draw sensor readings (if end hasn't been reached yet)
-        #if counter < num_points:
         prev_cell_tuple = (((int) (prev_point[1] - 0.5)), ((int) (prev_point[0] - 0.5)))
         print(cells_with_sensor)
         prev_cell_sensor_readings = cells_with_sensor[prev_cell_tuple]
@@ -191,7 +185,6 @@ def trace_traversal_with_sensor(sdf, points, cells_with_sensor, steps):
                 (x1, y1) = points[i+1]
                 ax.plot([x0, x1], [y0, y1], color='red')
             cells = prev_cell_sensor_readings[counter2]
-            #print('cells: ', cells)
             cell_coords = list()
             for cell in cells:
                 cell_coords.append(cell)
@@ -220,12 +213,21 @@ def trace_traversal_with_sensor(sdf, points, cells_with_sensor, steps):
 
 
 def trace_traversal_with_sensor_savefigs(sdf, points, cells_with_sensor, steps, fig_path):
-    #print('points: ', points)
+    """
+    Serves same purpose as trace_traversal_with_sensor, but saves each generated figure (of each step in the path traversal) to fig_path.
+
+    Args:
+    - sdf: SDF object of known map
+    - points: centers of traversed cells
+    - cells_with_sensor: mutable dictionary matching tuple cell keys to a list of groups of border cells referenced; 
+                        e.g. [(row, col): [[borderCellsAtMaxRange], [borderCellsAtSmallerRange]...]
+    - steps: number of steps to divide path tracing for viewing; to view all steps: steps = len(points) - 1
+    - fig_path: str path to which figures will be saved to
+    """
     num_points = len(points)
     counter = 1
 
     step_size = (num_points-1)//steps
-    #print('step_size AHHH: ', step_size)
 
     (first_point_x, first_point_y) = points[0]
     (end_point_x, end_point_y) = points[num_points-1]
@@ -236,7 +238,6 @@ def trace_traversal_with_sensor_savefigs(sdf, points, cells_with_sensor, steps, 
         curr_point = points[counter]
         
         # now draw sensor readings (if end hasn't been reached yet)
-        #if counter < num_points:
         prev_cell_tuple = (((int) (prev_point[1] - 0.5)), ((int) (prev_point[0] - 0.5)))
         prev_cell_sensor_readings = cells_with_sensor[prev_cell_tuple]
         num_groups = len(prev_cell_sensor_readings)
@@ -257,7 +258,6 @@ def trace_traversal_with_sensor_savefigs(sdf, points, cells_with_sensor, steps, 
                 (x1, y1) = points[i+1]
                 ax.plot([x0, x1], [y0, y1], color='red')
             cells = prev_cell_sensor_readings[counter2]
-            #print('cells: ', cells)
             cell_coords = list()
             for cell in cells:
                 cell_coords.append(cell)
@@ -265,7 +265,6 @@ def trace_traversal_with_sensor_savefigs(sdf, points, cells_with_sensor, steps, 
                 # b/c x = col & y = row
                 ax.add_patch(plt.Rectangle((col, row), 1, 1, color='yellow'))
             plt.savefig(fig_path + f'_step{counter}_substep{counter2}.png')
-            #plt.show()
             counter2 += 1
         
         # draw chosen point (curr)
@@ -285,26 +284,23 @@ def trace_traversal_with_sensor_savefigs(sdf, points, cells_with_sensor, steps, 
         (x1, y1) = points[i+1]
         ax_final.plot([x0, x1], [y0, y1], color='red')
     plt.savefig(fig_path + '_completePath.png')    
-    #plt.show()
 
     
 def trace_incremental_traversal_with_sensor(sdfs, points, cells_with_sensor, steps):
     '''
-    inputs:
-    sdfs: list of SDF objects, each is the local map of each step
-    points: centers of traversed cells
-    cells_with_sensor: dict with entries {sensorCell: [sensedCells]}
-    steps: number of steps taken in traversal
-    '''
+    Draws steps of path traversal incrementally. Path traversal algorithm with initially unknown map.
 
-    #print(cells_with_sensor)
-    
-    #print('points: ', points)
+    Args:
+    - sdf: list of SDF objects, each is the local map of each step
+    - points: centers of traversed cells
+    - cells_with_sensor: mutable dictionary matching tuple cell keys to a list of groups of border cells referenced; 
+                        e.g. [(row, col): [[borderCellsAtMaxRange], [borderCellsAtSmallerRange]...]
+    - steps: number of steps to divide path tracing for viewing; to view all steps: steps = len(points) - 1
+    '''
     num_points = len(points)
     counter = 1
 
     step_size = (num_points-1)//steps
-    #print('step_size AHHH: ', step_size)
 
     (first_point_x, first_point_y) = points[0]
     (end_point_x, end_point_y) = points[num_points-1]
@@ -369,21 +365,21 @@ def trace_incremental_traversal_with_sensor(sdfs, points, cells_with_sensor, ste
 
 def trace_incremental_traversal_with_sensor_savefig(sdfs, points, cells_with_sensor, steps, fig_path):
     '''
-    inputs:
-    sdfs: list of SDF objects, each is the local map of each step
-    points: centers of traversed cells
-    cells_with_sensor: dict with entries {sensorCell: [sensedCells]}
-    steps: number of steps taken in traversal
+    Serves same purpose as trace_incremental_traversal_with_sensor, but saves each generated figure (of each step in the path traversal) to fig_path.
+
+    Args:
+    - sdfs: list of SDF objects, each is the local map of each step
+    - points: centers of traversed cells
+    - cells_with_sensor: mutable dictionary matching tuple cell keys to a list of groups of border cells referenced; 
+                        e.g. [(row, col): [[borderCellsAtMaxRange], [borderCellsAtSmallerRange]...]
+    - steps: number of steps to divide path tracing for viewing; to view all steps: steps = len(points) - 1
+    - fig_path: str path to which figures will be saved to
     '''
 
-    #print(cells_with_sensor)
-    
-    #print('points: ', points)
     num_points = len(points)
     counter = 1
 
     step_size = (num_points-1)//steps
-    #print('step_size AHHH: ', step_size)
 
     (first_point_x, first_point_y) = points[0]
     (end_point_x, end_point_y) = points[num_points-1]
@@ -394,7 +390,6 @@ def trace_incremental_traversal_with_sensor_savefig(sdfs, points, cells_with_sen
         curr_point = points[counter]
         
         # now draw sensor readings (if end hasn't been reached yet)
-        #if counter < num_points:
         prev_cell_tuple = (((int) (prev_point[1] - 0.5)), ((int) (prev_point[0] - 0.5)))
         prev_cell_sensor_readings = cells_with_sensor[prev_cell_tuple]
         num_groups = len(prev_cell_sensor_readings)
@@ -404,7 +399,6 @@ def trace_incremental_traversal_with_sensor_savefig(sdfs, points, cells_with_sen
         # and then highlight all border cells considered until the next point (curr_point) is selected.
         f = plt.figure()
         while counter2 < num_groups:
-            #print(np.flipud(sdfs[counter2].distances))
             fig, ax = draw_obstacles_from_SDF(sdfs[counter - 1])
 
             # plot start and end points
@@ -417,7 +411,6 @@ def trace_incremental_traversal_with_sensor_savefig(sdfs, points, cells_with_sen
                 (x1, y1) = points[i+1]
                 ax.plot([x0, x1], [y0, y1], color='red')
             cells = prev_cell_sensor_readings[counter2]
-            #print('cells: ', cells)
             cell_coords = list()
             for cell in cells:
                 cell_coords.append(cell)
@@ -431,10 +424,7 @@ def trace_incremental_traversal_with_sensor_savefig(sdfs, points, cells_with_sen
         (prev_point_row, prev_point_col) = prev_point
         (curr_point_row, curr_point_col) = curr_point
         ax.plot([prev_point_row, curr_point_row], [prev_point_col, curr_point_col], color='red')      
-        # plt.show(block=False)
-        # print()
-        # plt.pause(0.35)
-        # plt.close("all")
+
         plt.savefig(fig_path + f'_step{counter}_Z.png')    
         counter += step_size
     
@@ -446,10 +436,4 @@ def trace_incremental_traversal_with_sensor_savefig(sdfs, points, cells_with_sen
         (x0, y0) = points[i]
         (x1, y1) = points[i+1]
         ax_final.plot([x0, x1], [y0, y1], color='red')
-    #plt.show()
     plt.savefig(fig_path + '_completePath.png')   
-
-
-        
- 
-
