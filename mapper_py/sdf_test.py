@@ -24,7 +24,7 @@ def test(map_name, grid_visible=True):
     #test_sdf(map_name)
     #test_robot(map_name, (31, 23), (37, 8))
     #test_robot(map_name, (31, 23), (37, 8))
-    test_robot(map_name, (0, 4), (6, 23))
+    test_robot(map_name, (2, 10), (33, 20), 2)
     test_robot(map_name, (0, 2), (37, 8))
 
     #rows = grid.height
@@ -73,7 +73,7 @@ def test_path_finding(sdf, start, end, sensor_range):
     traversedPoints = convert_tuple_cells_to_points(traversedCells) 
     trace_traversal_with_sensor(sdf, traversedPoints, borderCellGroups, len(traversedPoints)-1)
 
-def test_robot(map_name, start, end):
+def test_robot(map_name, start, end, stepSize):
     '''
     pathfinding with incremental knowledge
     '''
@@ -101,17 +101,17 @@ def test_robot(map_name, start, end):
     (fig2, ax2) = draw_obstacles_from_SDF(global_sdf)
     plt.close()
 
-    test_incremental_path_finding(robot, end)
+    test_incremental_path_finding(robot, end, stepSize)
 
-def test_incremental_path_finding(r, end):
+def test_incremental_path_finding(r, end, stepSize):
     '''
     inputs:
-    start: tuple
+    r: Robot()
     end: tuple
     '''
 
     borderCellGroups = dict()
-    traversedCells, sdfs = r.traverse3(end, borderCellGroups)
+    traversedCells, sdfs = r.traverse3(end, borderCellGroups, stepSize)
     traversedPoints = convert_tuple_cells_to_points(traversedCells) 
     trace_incremental_traversal_with_sensor(sdfs, traversedPoints, borderCellGroups, len(traversedPoints)-1)
 
@@ -186,7 +186,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     #test(args.map)
-    test("obs1")
+    test("obs3")
 
     '''png_map_path = "test_data/" + "obs1" + ".png"
     grid = Grid2D(0.5, 30, 40, 0.001, 0.999)

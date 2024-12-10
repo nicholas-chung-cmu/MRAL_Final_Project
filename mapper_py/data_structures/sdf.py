@@ -765,8 +765,7 @@ class SDF:
                         # check if goal is within reach or robot cannot reach goal from next_cell
                         if (cell_dist_from_end <= range and not self.obstacleInPath(next_cell, end)) or cell_dist_from_end > range:
                             #print('cell dist from end: ', cell_dist_from_end)
-                            if (np.random.random() > 0.66
-                                or ((cell_dist_from_end == best_dist_from_end) and (cell_dist_from_obs > best_dist_from_obs))
+                            if ((np.random.random() > 0.25 and (cell_dist_from_obs > best_dist_from_obs))
                                 or ((cell_dist_from_end < best_dist_from_end) and (cell_dist_from_obs > 0))):
                                 #print('CHANGING BEST CELL')
                                 best_cell = next_cell
@@ -777,13 +776,15 @@ class SDF:
             range -= 1
     
         if best_cell == curr:
+            print(np.flipud(self.distances))
             raise Exception('No next step found.')
         
         # make current cell an obstacle, update distances
-        #curr_idx = self.grid.to_index(Cell(curr[0], curr[1]))
-        #self.grid.data[curr_idx] = self.grid.occ_thres
-        #self.load_obs()
-        #self.populate_sdf()
+        if np.random.random() > 0.8:
+            curr_idx = self.grid.to_index(Cell(curr[0], curr[1]))
+            self.grid.data[curr_idx] = self.grid.occ_thres
+            self.load_obs()
+            self.populate_sdf()
 
         return best_cell
 

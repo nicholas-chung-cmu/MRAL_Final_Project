@@ -239,6 +239,7 @@ def trace_incremental_traversal_with_sensor(sdfs, points, cells_with_sensor, ste
     (first_point_x, first_point_y) = points[0]
     (end_point_x, end_point_y) = points[num_points-1]
     while counter < num_points:
+        break
 
         prev_point = points[counter-1]
         curr_point = points[counter]

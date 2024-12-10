@@ -99,12 +99,14 @@ class Robot:
             #print()
         return path, sdfs
     
-    def traverse3(self, end, borderCellGroups):
+    def traverse3(self, end, borderCellGroups, stepSize):
         '''
         uses new chooseNextCell3 function
 
         inputs:
         end: tuple of robot's goal
+        borderCellGroups: mutable dict of cells and potential spots
+        stepSize: max distance the robot can step
 
         outputs:
         path: list of traversed Cells
@@ -147,7 +149,7 @@ class Robot:
             #move
             path.append(self.pos)
             #print("Robot: ", str(self.pos[0]), str(self.pos[1]))
-            self.pos = self.sdf.chooseNextCell3(self.pos, end, self.mapper.sensor.max_range, borderCellGroups)
+            self.pos = self.sdf.chooseNextCell3(self.pos, end, stepSize, borderCellGroups)
             #input("continue") #so you can watch the robot move
             #print()
         return path, sdfs
