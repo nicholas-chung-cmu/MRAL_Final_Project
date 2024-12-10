@@ -77,7 +77,7 @@ class Robot:
 
         # goal is a tuple of form (row, col)
         path = list()
-        sdfs = list()
+        sdfs = list() # to view local map progress later
         while self.pos != end:
             
             # observe and update map
@@ -126,7 +126,7 @@ class Robot:
 
         # goal is a tuple of form (row, col)
         path = list()
-        sdfs = list()
+        sdfs = list() # to view local map progress later
         while self.pos != end:
             
             # observe and update map

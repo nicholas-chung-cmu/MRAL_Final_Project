@@ -15,7 +15,7 @@ class SDF:
     def __init__(self, grid):
         """Initialize the SDF data structure.
         """
-        if grid == None: #used with __deepcopy__ to save a little time
+        if grid == None: #used with self.copy to save a little time
             return
         
         self.grid = grid
@@ -26,12 +26,6 @@ class SDF:
 
         self.load_obs()
         self.populate_sdf()
-
-        #self.N = self.cols * self.rows
-
-        # Initially all the logodds values are zero.
-        # A logodds value of zero corresponds to an occupancy probability of 0.5.
-        #self.data = [0.0] * self.N
 
     def copy(self):
         '''
@@ -262,7 +256,7 @@ class SDF:
 
                         # check if goal is within reach or robot cannot reach goal from next_cell
                         if (cell_dist_from_end <= range and not self.obstacleInPath(next_cell, end)) or cell_dist_from_end > range:
-                            if (np.random.random() > 0.66
+                            if (np.random.random() > 0.9
                                 or ((cell_dist_from_end == best_dist_from_end) and (cell_dist_from_obs > best_dist_from_obs))
                                 or ((cell_dist_from_end < best_dist_from_end) and (cell_dist_from_obs > 0))):
                                 best_cell = next_cell
@@ -276,10 +270,11 @@ class SDF:
             raise Exception('No next step found.')
         
         # make current cell an obstacle, update distances
-        curr_idx = self.grid.to_index(Cell(curr[0], curr[1]))
-        self.grid.data[curr_idx] = self.grid.occ_thres
-        self.load_obs()
-        self.populate_sdf()
+        if np.random.random() > 0.7:
+            curr_idx = self.grid.to_index(Cell(curr[0], curr[1]))
+            self.grid.data[curr_idx] = self.grid.occ_thres
+            self.load_obs()
+            self.populate_sdf()
 
         return best_cell
 

@@ -37,10 +37,10 @@ def test_sdf(map_name):
     '''
 
     # path for belle
-    png_map_path = rf'C:\Users\litin\OneDrive\Desktop\MRAL_Final_Project\mapper_py\test_data\{map_name}.png'
+    # png_map_path = rf'C:\Users\litin\OneDrive\Desktop\MRAL_Final_Project\mapper_py\test_data\{map_name}.png'
     
     # path for nick
-    #png_map_path = "test_data/" + map_name + ".png"
+    png_map_path = "test_data/" + map_name + ".png"
     grid = Grid2D(0.5, 30, 40, 0.001, 0.999)
     grid = png_to_grid2d(grid, png_map_path)
 
@@ -85,10 +85,10 @@ def test_robot(map_name, start, end):
     '''
 
     # path for belle
-    png_map_path = rf'C:\Users\litin\OneDrive\Desktop\MRAL_Final_Project\mapper_py\test_data\{map_name}.png'
+    # png_map_path = rf'C:\Users\litin\OneDrive\Desktop\MRAL_Final_Project\mapper_py\test_data\{map_name}.png'
     
     # path for nick
-    #png_map_path = "test_data/" + map_name + ".png"
+    png_map_path = "test_data/" + map_name + ".png"
     
     #initializing robot object
     local_grid = Grid2D(0.5, 30, 40, 0.001, 0.999)

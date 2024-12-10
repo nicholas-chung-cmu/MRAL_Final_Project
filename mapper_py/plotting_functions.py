@@ -26,7 +26,6 @@ def draw_grid(grid, rows, cols, title, cmap_str='Greys'):
     ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
 
     return (fig, ax)
-    #plt.show()
 
 def draw_obstacles_from_SDF(sdf):
     rows = sdf.rows
